@@ -1,0 +1,16 @@
+# منع تخزين ملف البيانات بالكاش عشان التحديث يظهر فوراً
+<FilesMatch "\.json$">
+  <IfModule mod_headers.c>
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+  </IfModule>
+</FilesMatch>
+
+# منع تشغيل أو تحميل ملفات النسخ الاحتياطي واللوج
+<FilesMatch "\.(log|bak|csv)$">
+  Require all denied
+</FilesMatch>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html application/json application/javascript text/css
+</IfModule>

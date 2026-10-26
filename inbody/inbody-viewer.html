@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>عارض تقارير InBody</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --page:#e9ebee;
+    --paper:#ffffff;
+    --ink:#101418;
+    --ink-soft:#5b6270;
+    --line:#c9ced6;
+    --line-soft:#e3e6ea;
+    --accent:#1f6fb2;
+    --accent-2:#0f8f8f;
+    --well:#2f8f4e;
+    --over:#c1531f;
+    --under:#9a7b1f;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:Arial,Helvetica,"Segoe UI",sans-serif;
+    background:var(--page);
+    color:var(--ink);
+    min-height:100%;
+  }
+  .wrap{max-width:1040px;margin:0 auto;padding:18px 14px 60px;}
+
+  header.top{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:14px 18px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:16px;
+  }
+  header.top h1{font-size:1rem;margin:0;font-weight:700;}
+  header.top p{margin:2px 0 0;font-size:.76rem;color:var(--ink-soft);}
+  .upload-zone{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  .btn{
+    appearance:none;border:1px solid var(--line);border-radius:5px;
+    padding:8px 15px;font-size:.82rem;font-weight:600;cursor:pointer;
+    background:#fff;color:var(--ink);
+  }
+  .btn:hover{border-color:var(--accent);color:var(--accent);}
+  .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .btn-primary:hover{background:#185a92;color:#fff;}
+  input[type=file]{display:none;}
+  .status-line{font-size:.72rem;color:var(--ink-soft);width:100%;}
+
+  .empty{margin-top:50px;text-align:center;color:var(--ink-soft);padding:30px 16px;}
+  .empty h2{color:var(--ink);font-size:1.1rem;margin-bottom:6px;}
+
+  /* ===== paper report ===== */
+  .paper{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:4px;
+    box-shadow:0 1px 4px rgba(0,0,0,.06);
+    overflow:hidden;
+  }
+  .paper-head{
+    padding:14px 20px 12px;
+    border-bottom:2px solid var(--ink);
+    display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px 30px;
+    font-size:.82rem;
+  }
+  .paper-head .col span{display:block;color:var(--ink-soft);font-size:.68rem;}
+  .paper-head .col b{font-size:.88rem;}
+  .paper-head .device{
+    font-weight:800;letter-spacing:1px;font-size:.85rem;color:var(--accent-2);
+    align-self:flex-end;
+  }
+
+  .row2col{display:grid;grid-template-columns:1.55fr 1fr;gap:0;}
+  @media (max-width:760px){.row2col{grid-template-columns:1fr;}}
+  .col-left,.col-right{padding:16px 20px;}
+  .col-left{border-left:1px solid var(--line-soft);}
+  @media (max-width:760px){.col-left{border-left:none;border-top:1px solid var(--line-soft);}}
+
+  h3.sec{
+    font-size:.86rem;font-weight:800;margin:0 0 10px;
+    padding-bottom:5px;border-bottom:1px solid var(--ink);
+    display:block;
+  }
+  .sec-block{margin-bottom:20px;}
+  .sec-block:last-child{margin-bottom:0;}
+
+  /* body composition gradient box */
+  .comp-box{
+    background:linear-gradient(115deg,#eaf3fb 0%,#dcecf7 35%,#cfe6ee 60%,#bfe3e0 100%);
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:12px 16px;
+    display:grid;grid-template-columns:1fr 1fr;
+    gap:4px 22px;
+    font-size:.8rem;
+  }
+  .comp-line{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dashed rgba(0,0,0,.12);}
+  .comp-line:last-child{border-bottom:none;}
+  .comp-line .lbl{font-weight:700;}
+  .comp-line .mid{color:var(--ink-soft);font-size:.72rem;}
+  .comp-line .val{font-weight:800;}
+  .status-txt{font-size:.68rem;font-weight:700;margin-right:4px;}
+  .status-txt.well,.status-txt.optimal{color:var(--well);}
+  .status-txt.over{color:var(--over);}
+  .status-txt.under{color:var(--under);}
+
+  /* body status / abdominal bars */
+  .barline{margin-bottom:14px;}
+  .barline:last-child{margin-bottom:0;}
+  .barline .head{display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:3px;}
+  .barline .head .name{font-weight:700;}
+  .barline .head .value{font-weight:800;}
+  .zonelabels{display:flex;font-size:.6rem;color:var(--ink-soft);margin-bottom:2px;}
+  .zonelabels span{flex:1;text-align:center;}
+  .track{
+    position:relative;height:16px;border:1px solid var(--line);border-radius:2px;
+    display:flex;overflow:hidden;background:#fafbfc;
+  }
+  .track .zone{height:100%;border-left:1px solid rgba(0,0,0,.08);}
+  .track .fill{
+    position:absolute;top:0;bottom:0;right:0;background:var(--ink);opacity:.78;
+  }
+  .ticks{display:flex;font-size:.6rem;color:var(--ink-soft);margin-top:2px;justify-content:space-between;}
+
+  /* body type grid */
+  .bodytype{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:4px;
+    border:1px solid var(--line);padding:6px;border-radius:3px;background:#fafbfc;
+  }
+  .bodytype .cell{
+    border:1px solid var(--line-soft);min-height:44px;display:flex;align-items:center;justify-content:center;
+    font-size:.66rem;text-align:center;color:var(--ink-soft);padding:2px;background:#fff;
+  }
+  .bodytype .cell.active{
+    background:#fdeee4;border-color:var(--over);color:var(--over);font-weight:800;font-size:.72rem;
+  }
+  .bodytype-axis{display:flex;justify-content:space-between;font-size:.6rem;color:var(--ink-soft);margin-top:3px;}
+
+  table.seg{width:100%;border-collapse:collapse;font-size:.72rem;}
+  table.seg th,table.seg td{padding:5px 4px;text-align:center;border-bottom:1px solid var(--line-soft);}
+  table.seg th{color:var(--ink-soft);font-weight:700;font-size:.64rem;}
+  table.seg td:first-child,table.seg th:first-child{text-align:right;font-weight:700;}
+  table.seg .rng{display:block;font-size:.58rem;color:var(--ink-soft);}
+
+  .balance-list{font-size:.78rem;}
+  .balance-list .brow{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line-soft);}
+  .balance-list .brow:last-child{border-bottom:none;}
+  .balance-list b.ok{color:var(--well);}
+  .balance-list b.bad{color:var(--over);}
+
+  .kv-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;font-size:.78rem;}
+  .kv-grid .kv{display:flex;justify-content:space-between;border-bottom:1px dashed var(--line-soft);padding:3px 0;}
+  .kv-grid .kv b{font-weight:800;}
+
+  .score-total{
+    margin-top:10px;border:2px solid var(--ink);border-radius:4px;
+    display:flex;align-items:baseline;justify-content:center;gap:8px;padding:10px;
+  }
+  .score-total .num{font-size:1.9rem;font-weight:900;}
+  .score-total .den{font-size:.9rem;color:var(--ink-soft);}
+
+  table.plain{width:100%;border-collapse:collapse;font-size:.75rem;margin-top:6px;}
+  table.plain th,table.plain td{border:1px solid var(--line-soft);padding:6px 8px;text-align:center;}
+  table.plain th{background:#f3f5f7;font-weight:700;}
+
+  .analysis-box{
+    border:1px solid var(--line);border-right:4px solid var(--accent-2);
+    background:#f6fbfb;border-radius:3px;padding:10px 14px;
+    font-size:.8rem;line-height:1.7;
+  }
+
+  .paper-foot{
+    padding:10px 20px;border-top:1px solid var(--line-soft);
+    font-size:.65rem;color:var(--ink-soft);
+  }
+
+  /* readings list */
+  .list-wrap{margin-top:22px;}
+  .list-wrap h2{font-size:.95rem;margin:0 0 10px;}
+  .readings{display:flex;flex-direction:column;gap:7px;}
+  .reading-item{
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;
+    background:var(--paper);border:1px solid var(--line);border-radius:5px;
+    padding:10px 14px;cursor:pointer;
+  }
+  .reading-item:hover{border-color:var(--accent-2);}
+  .reading-item.active{border-color:var(--accent-2);background:#f2fbfb;}
+  .reading-item .rdate{font-weight:800;font-size:.85rem;}
+  .reading-item .rmeta{font-size:.7rem;color:var(--ink-soft);}
+  .reading-item .rmini{display:flex;gap:14px;font-size:.75rem;}
+  .reading-item .rmini b{color:var(--accent);}
+
+  footer.note{margin-top:20px;font-size:.68rem;color:var(--ink-soft);text-align:center;}
+</style>
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1>عارض تقارير InBody</h1>
+    <p>ارفع ملف Excel فيه قراءاتك، واختر أي فحص من القائمة تحت لتعبئة الصفحة</p>
+  </div>
+  <div class="upload-zone">
+    <label class="btn btn-primary" for="fileInput">رفع ملف Excel</label>
+    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+    <button class="btn" id="sampleBtn">تحميل بيانات تجريبية</button>
+    <button class="btn" id="clearBtn">مسح البيانات المحفوظة</button>
+    <span class="status-line" id="statusLine"></span>
+  </div>
+</header>
+
+<div class="wrap">
+  <div id="emptyState" class="empty">
+    <h2>ما في بيانات بعد</h2>
+    <p>ارفع ملف Excel بنفس أعمدة سجلك أو اضغط "تحميل بيانات تجريبية".</p>
+  </div>
+
+  <div id="reportRoot"></div>
+
+  <div id="listWrap" class="list-wrap" style="display:none;">
+    <h2>كل القراءات</h2>
+    <div class="readings" id="readingsList"></div>
+  </div>
+
+  <footer class="note">تصميم مبني كنسخة تقريبية من شكل تقرير InBody لعرض بياناتك الخاصة — وليس تقريراً طبياً رسمياً.</footer>
+</div>
+
+<script>
+const PERSON = { id:"798286811", name:"Mohammad Abu Mezah", height:174, age:44, gender:"Male" };
+
+const REF = {
+  lbm:[53.2,56.6], slm:[49.4,52.6], smm:[29.6,31.5], tbw:[38.3,40.7],
+  mineral:[3.8,3.9], protein:[10.6,11.9], mbfTotal:[10.0,13.3],
+  segSlmArm:[3.28,3.49], segSlmLeg:[9.06,9.65], segSlmTrunk:[24.70,26.30],
+  segMbfArm:[0.97,1.32], segMbfLeg:[2.68,3.76], segMbfTrunk:[7.21,9.98]
+};
+
+let readings = [];
+let activeIndex = 0;
+
+const API_URL = 'api.php';
+const LOCAL_KEY = 'inbody_readings_v1';
+
+async function loadPersisted(){
+  try{
+    const res = await fetch(API_URL, {cache:'no-store'});
+    if(res.ok){
+      const data = await res.json();
+      if(Array.isArray(data) && data.length){
+        readings = data;
+        activeIndex = readings.length - 1;
+        onDataLoaded('تم تحميل ' + readings.length + ' قراءة محفوظة من السيرفر');
+        return;
+      }
+    }
+  }catch(e){ /* api.php غير متوفر - جرب المتصفح */ }
+  try{
+    const raw = localStorage.getItem(LOCAL_KEY);
+    if(raw){
+      const data = JSON.parse(raw);
+      if(Array.isArray(data) && data.length){
+        readings = data;
+        activeIndex = readings.length - 1;
+        onDataLoaded('تم تحميل ' + readings.length + ' قراءة محفوظة محلياً بالمتصفح');
+      }
+    }
+  }catch(e){ /* ولا هون - يبدأ فاضي */ }
+}
+
+async function persist(){
+  try{ localStorage.setItem(LOCAL_KEY, JSON.stringify(readings)); }catch(e){}
+  try{
+    await fetch(API_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(readings)
+    });
+  }catch(e){ /* السيرفر ما استلم - البيانات لسا محفوظة محلياً */ }
+}
+
+document.getElementById('clearBtn').addEventListener('click', async () => {
+  if(!confirm('متأكد إنك بدك تمسح كل القراءات المحفوظة؟')) return;
+  readings = [];
+  localStorage.removeItem(LOCAL_KEY);
+  try{
+    await fetch(API_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:'[]'});
+  }catch(e){}
+  location.reload();
+});
+
+const fileInput = document.getElementById('fileInput');
+const statusLine = document.getElementById('statusLine');
+const emptyState = document.getElementById('emptyState');
+const reportRoot = document.getElementById('reportRoot');
+const listWrap = document.getElementById('listWrap');
+const readingsListEl = document.getElementById('readingsList');
+
+document.getElementById('sampleBtn').addEventListener('click', () => {
+  readings = sampleData();
+  activeIndex = readings.length - 1;
+  onDataLoaded('تم تحميل ' + readings.length + ' قراءات تجريبية');
+});
+
+fileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try{
+      const data = new Uint8Array(ev.target.result);
+      const wb = XLSX.read(data, {type:'array'});
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, {defval:''});
+      readings = rows.map(normalizeRow).filter(r => r.date);
+      if(readings.length === 0){
+        statusLine.textContent = 'ما لقيت صفوف صالحة بالملف — تأكد من أسماء الأعمدة.';
+        return;
+      }
+      activeIndex = readings.length - 1;
+      onDataLoaded('تم تحميل ' + readings.length + ' قراءة من ' + file.name);
+      persist();
+    }catch(err){
+      statusLine.textContent = 'تعذّرت قراءة الملف: ' + err.message;
+    }
+  };
+  reader.onerror = () => { statusLine.textContent = 'تعذّر فتح الملف.'; };
+  reader.readAsArrayBuffer(file);
+});
+
+function onDataLoaded(msg){
+  statusLine.textContent = msg;
+  emptyState.style.display = 'none';
+  listWrap.style.display = 'block';
+  renderReport(activeIndex);
+  renderList();
+}
+
+function pick(row, keys){
+  const map = {};
+  Object.keys(row).forEach(k => map[k.toLowerCase().replace(/[^a-z0-9]/g,'')] = row[k]);
+  for(const k of keys){
+    const nk = k.toLowerCase().replace(/[^a-z0-9]/g,'');
+    if(map[nk] !== undefined && map[nk] !== '') return map[nk];
+  }
+  return '';
+}
+function num(v){ const n = parseFloat(v); return isNaN(n) ? null : n; }
+
+function normalizeRow(row){
+  return {
+    date: pick(row,['Date']),
+    weight: num(pick(row,['Weight (kg)','Weight'])),
+    bmi: num(pick(row,['BMI'])),
+    pbf: num(pick(row,['PBF %','PBF','Body Fat %'])),
+    lbm: num(pick(row,['LBM (kg)','LBM'])),
+    slm: num(pick(row,['SLM (kg)','SLM'])),
+    smm: num(pick(row,['SMM (kg)','SMM'])),
+    tbw: num(pick(row,['TBW (kg)','TBW'])),
+    mineral: num(pick(row,['Mineral (kg)','Mineral'])),
+    protein: num(pick(row,['Protein (kg)','Protein'])),
+    vfl: num(pick(row,['VFL'])),
+    vfa: num(pick(row,['VFA'])),
+    whr: num(pick(row,['WHR'])),
+    ac: num(pick(row,['Abdominal Circumference (cm)','AC'])),
+    bmr: num(pick(row,['BMR (kcal)','BMR'])),
+    tee: num(pick(row,['TEE (kcal)','TEE'])),
+    score: num(pick(row,['Total Score','Score'])),
+    balUL: pick(row,['Balance Upper-Lower']) || '—',
+    balLR: pick(row,['Balance Left-Right']) || '—',
+    ecwtbw: num(pick(row,['ECW/TBW'])),
+    slmLtArm: num(pick(row,['SLM Lt.Arm'])), slmRtArm: num(pick(row,['SLM Rt.Arm'])),
+    slmLtLeg: num(pick(row,['SLM Lt.Leg'])), slmRtLeg: num(pick(row,['SLM Rt.Leg'])),
+    slmTrunk: num(pick(row,['SLM Trunk'])),
+    mbfLtArm: num(pick(row,['MBF Lt.Arm'])), mbfRtArm: num(pick(row,['MBF Rt.Arm'])),
+    mbfLtLeg: num(pick(row,['MBF Lt.Leg'])), mbfRtLeg: num(pick(row,['MBF Rt.Leg'])),
+    mbfTrunk: num(pick(row,['MBF Trunk'])),
+    analysis: pick(row,['Analysis','Notes'])
+  };
+}
+
+function statusOf(value, min, max){
+  if(value === null) return {label:'', cls:''};
+  if(value < min) return {label:'Under', cls:'under'};
+  if(value > max) return {label:'Well', cls:'well'};
+  return {label:'Optimal', cls:'optimal'};
+}
+// for composition items where "above range" means Over (fat) vs Well (muscle) - decide per metric
+function statusOverIsBad(value, min, max){
+  if(value === null) return {label:'', cls:''};
+  if(value < min) return {label:'Under', cls:'under'};
+  if(value > max) return {label:'Over', cls:'over'};
+  return {label:'Optimal', cls:'optimal'};
+}
+function statusOverIsGood(value, min, max){
+  if(value === null) return {label:'', cls:''};
+  if(value < min) return {label:'Under', cls:'under'};
+  if(value > max) return {label:'Over', cls:'well'};
+  return {label:'Optimal', cls:'optimal'};
+}
+
+function compLine(label, value, unit, min, max, overGood){
+  const st = overGood ? statusOverIsGood(value,min,max) : statusOverIsBad(value,min,max);
+  return `<div class="comp-line">
+    <span class="lbl">${label}</span>
+    <span class="mid">${value ?? '—'} ${unit} <span class="rng">[${min}~${max}]</span></span>
+    <span class="status-txt ${st.cls}">${st.label}</span>
+  </div>`;
+}
+
+function bar(name, value, scaleMin, scaleMax, zoneEdges, zoneNames, unit, tickStep){
+  if(value === null) value = scaleMin;
+  const clamped = Math.max(scaleMin, Math.min(scaleMax, value));
+  const pct = ((clamped - scaleMin) / (scaleMax - scaleMin)) * 100;
+  const zonesHtml = zoneEdges.slice(0,-1).map((edge,i) => {
+    const from = zoneEdges[i], to = zoneEdges[i+1];
+    const w = (to-from)/(scaleMax-scaleMin)*100;
+    const shades = ['#f4ede0','#eef7f0','#fbeee7'];
+    return `<div class="zone" style="width:${w}%;background:${shades[i%shades.length]}"></div>`;
+  }).join('');
+  const labelsHtml = zoneNames ? `<div class="zonelabels">${zoneNames.map(n=>`<span>${n}</span>`).join('')}</div>` : '';
+  const ticks = [];
+  for(let t = scaleMin; t <= scaleMax + 0.001; t += tickStep) ticks.push(Math.round(t*100)/100);
+  return `
+    <div class="barline">
+      <div class="head"><span class="name">${name}</span><span class="value">${value ?? '—'} ${unit||''}</span></div>
+      ${labelsHtml}
+      <div class="track">${zonesHtml}<div class="fill" style="width:${pct}%"></div></div>
+      <div class="ticks">${ticks.map(t=>`<span>${t}</span>`).join('')}</div>
+    </div>`;
+}
+
+function segRow(label, lt, rt, leg1, leg2, trunk, refArm, refLeg, refTrunk){
+  const s = v => v===null? '—' : v;
+  const tag = (v,min,max) => v===null? '' : (v<min?'<span class="rng" style="color:var(--under)">Under</span>':v>max?'<span class="rng" style="color:var(--well)">Well</span>':'<span class="rng" style="color:var(--well)">Well</span>');
+  return `<tr>
+    <td>${label}<span class="rng">${refArm[0]}~${refArm[1]} (arm)</span></td>
+    <td>${s(lt)}${tag(lt,refArm[0],refArm[1])}</td>
+    <td>${s(rt)}${tag(rt,refArm[0],refArm[1])}</td>
+    <td>${s(leg1)}${tag(leg1,refLeg[0],refLeg[1])}</td>
+    <td>${s(leg2)}${tag(leg2,refLeg[0],refLeg[1])}</td>
+    <td>${s(trunk)}${tag(trunk,refTrunk[0],refTrunk[1])}</td>
+  </tr>`;
+}
+
+function bodyTypeGrid(bmi, pbf){
+  const col = bmi==null?1:(bmi<25?0:bmi<30?1:2);
+  const row = pbf==null?1:(pbf<15?0:pbf<25?1:2);
+  const names = [
+    ['Athletic','Standard','Sturdy'],
+    ['Thin','Standard','Overweight'],
+    ['Skinny-fat','Overweight','Obese']
+  ];
+  let cells = '';
+  for(let r=0;r<3;r++){
+    for(let c=0;c<3;c++){
+      const active = (r===row && c===col);
+      cells += `<div class="cell ${active?'active':''}">${active? names[r][c] : ''}</div>`;
+    }
+  }
+  return `<div class="bodytype">${cells}</div>
+    <div class="bodytype-axis"><span>PBF ↕ / BMI ↔</span><span>نطاق تقريبي وليس تصنيفاً طبياً</span></div>`;
+}
+
+function renderReport(idx){
+  const r = readings[idx];
+  const mbfKg = (r.weight && r.pbf) ? (r.weight * r.pbf / 100) : null;
+
+  reportRoot.innerHTML = `
+  <div class="paper">
+    <div class="paper-head">
+      <div class="col"><span>ID</span><b>${PERSON.id}</b></div>
+      <div class="col"><span>Date</span><b>${r.date}</b></div>
+      <div class="col"><span>Name</span><b>${PERSON.name}</b></div>
+      <div class="col"><span>Height</span><b>${PERSON.height} cm</b></div>
+      <div class="col"><span>Weight</span><b>${r.weight ?? '—'} kg</b></div>
+      <div class="col"><span>Age</span><b>${PERSON.age}</b></div>
+      <div class="col"><span>Gender</span><b>${PERSON.gender}</b></div>
+      <div class="device">InBody</div>
+    </div>
+
+    <div class="row2col">
+      <div class="col-left">
+
+        <div class="sec-block">
+          <h3 class="sec">Body Composition</h3>
+          <div class="comp-box">
+            ${compLine('Weight', r.weight,'kg',59.9,73.2,true)}
+            ${compLine('L.B.M.', r.lbm,'kg',REF.lbm[0],REF.lbm[1],true)}
+            ${compLine('S.L.M.', r.slm,'kg',REF.slm[0],REF.slm[1],true)}
+            ${compLine('S.M.M.', r.smm,'kg',REF.smm[0],REF.smm[1],true)}
+            ${compLine('T.B.W.', r.tbw,'kg',REF.tbw[0],REF.tbw[1],true)}
+            ${compLine('Protein', r.protein,'kg',REF.protein[0],REF.protein[1],true)}
+            ${compLine('Mineral', r.mineral,'kg',REF.mineral[0],REF.mineral[1],true)}
+            ${compLine('M.B.F.', mbfKg? mbfKg.toFixed(1):null,'kg',REF.mbfTotal[0],REF.mbfTotal[1],false)}
+          </div>
+        </div>
+
+        <div class="sec-block">
+          <h3 class="sec">Body Status</h3>
+          ${bar('Weight', r.weight, 70,150,[70,90,110,150],['Under','Optimal','Over'],'kg',10)}
+          ${bar('B.M.I.', r.bmi, 14.5,40,[14.5,18.5,25,40],['Under','Optimal','Over'],'kg/m²',5)}
+          ${bar('P.B.F.', r.pbf, 10,40,[10,15,20,40],['Under','Optimal','Over'],'%',5)}
+          ${bar('S.L.M.', r.slm, 70,150,[70,90,110,150],['Under','Optimal','Over'],'kg (%)',10)}
+          ${bar('S.M.M.', r.smm, 20,45,[20,29.6,31.5,45],['Under','Optimal','Over'],'kg',5)}
+        </div>
+
+        <div class="sec-block">
+          <h3 class="sec">Abdominal Analysis</h3>
+          ${bar('V.F.L.', r.vfl, 1,20,[1,5,9,11,16,20],['Subcut.','Balanced','Border','Visc. I','Visc. II'],'',5)}
+          ${bar('V.F.A.', r.vfa, 0,200,[0,50,100,200],['Under','Optimal','Over'],'cm²',50)}
+          ${bar('W.H.R.', r.whr, 0.7,1.1,[0.7,0.75,0.9,1.1],['Under','Optimal','Over'],'',0.1)}
+          <div class="barline">
+            <div class="head"><span class="name">A.C.</span><span class="value">${r.ac ?? '—'} cm</span></div>
+            <div class="zonelabels"><span style="text-align:right">${r.ac && r.ac < 102 ? '(Less than 102cm — Optimal)' : '(102cm or more — Over)'}</span></div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="col-right">
+
+        <div class="sec-block">
+          <h3 class="sec">Body Type</h3>
+          ${bodyTypeGrid(r.bmi, r.pbf)}
+        </div>
+
+        <div class="sec-block">
+          <h3 class="sec">Segmental S.L.M.</h3>
+          <table class="seg">
+            <tr><th></th><th>Lt.Arm</th><th>Rt.Arm</th><th>Lt.Leg</th><th>Rt.Leg</th><th>Trunk</th></tr>
+            ${segRow('kg', r.slmLtArm, r.slmRtArm, r.slmLtLeg, r.slmRtLeg, r.slmTrunk, REF.segSlmArm, REF.segSlmLeg, REF.segSlmTrunk)}
+          </table>
+        </div>
+
+        <div class="sec-block">
+          <h3 class="sec">Segmental M.B.F.</h3>
+          <table class="seg">
+            <tr><th></th><th>Lt.Arm</th><th>Rt.Arm</th><th>Lt.Leg</th><th>Rt.Leg</th><th>Trunk</th></tr>
+            ${segRow('kg', r.mbfLtArm, r.mbfRtArm, r.mbfLtLeg, r.mbfRtLeg, r.mbfTrunk, REF.segMbfArm, REF.segMbfLeg, REF.segMbfTrunk)}
+          </table>
+        </div>
+
+        <div class="sec-block">
+          <h3 class="sec">Balance</h3>
+          <div class="balance-list">
+            <div class="brow"><span>Upper–Lower</span><b class="${r.balUL==='Balanced'?'ok':'bad'}">${r.balUL}</b></div>
+            <div class="brow"><span>Left–Right</span><b class="${r.balLR==='Balanced'?'ok':'bad'}">${r.balLR}</b></div>
+            <div class="brow"><span>E.C.W./T.B.W.</span><b class="${r.ecwtbw && r.ecwtbw<0.40 ? 'ok':'bad'}">${r.ecwtbw ?? '—'}</b></div>
+          </div>
+        </div>
+
+        <div class="sec-block">
+          <h3 class="sec">Energy &amp; Score</h3>
+          <div class="kv-grid">
+            <div class="kv"><span>B.M.R.</span><b>${r.bmr ?? '—'} Kcal</b></div>
+            <div class="kv"><span>T.E.E.</span><b>${r.tee ?? '—'} Kcal</b></div>
+          </div>
+          <div class="score-total"><span class="num">${r.score ?? '—'}</span><span class="den">/ 100</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    ${idx > 0 ? `
+    <div class="col-left" style="padding:16px 20px;border-top:1px solid var(--line-soft);">
+      <h3 class="sec">Body Composition Change</h3>
+      <table class="plain">
+        <tr><th></th><th>Date</th><th>Weight</th><th>P.B.F.</th><th>S.L.M.</th></tr>
+        <tr><td>Previous</td><td>${readings[idx-1].date}</td><td>${readings[idx-1].weight ?? '—'}</td><td>${readings[idx-1].pbf ?? '—'}%</td><td>${readings[idx-1].slm ?? '—'}</td></tr>
+        <tr><td>Present</td><td>${r.date}</td><td>${r.weight ?? '—'}</td><td>${r.pbf ?? '—'}%</td><td>${r.slm ?? '—'}</td></tr>
+      </table>
+    </div>` : ''}
+
+    ${r.analysis ? `
+    <div style="padding:16px 20px;border-top:1px solid var(--line-soft);">
+      <h3 class="sec">التحليل</h3>
+      <div class="analysis-box">${r.analysis}</div>
+    </div>` : ''}
+
+    <div class="paper-foot">This result consists of calculated values based on measured weight, impedance, and entered height, age and gender.</div>
+  </div>`;
+}
+
+function renderList(){
+  readingsListEl.innerHTML = readings.map((r,i) => `
+    <div class="reading-item ${i===activeIndex?'active':''}" data-idx="${i}">
+      <div>
+        <div class="rdate">${r.date}</div>
+        <div class="rmeta">Score ${r.score ?? '—'}/100</div>
+      </div>
+      <div class="rmini">
+        <div>الوزن <b>${r.weight ?? '—'}</b></div>
+        <div>الدهون <b>${r.pbf ?? '—'}%</b></div>
+        <div>العضل <b>${r.smm ?? '—'}</b></div>
+      </div>
+    </div>
+  `).join('');
+  readingsListEl.querySelectorAll('.reading-item').forEach(el => {
+    el.addEventListener('click', () => {
+      activeIndex = Number(el.dataset.idx);
+      renderReport(activeIndex);
+      renderList();
+      reportRoot.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+}
+
+function sampleData(){
+  return [
+    {date:'17/08/2026',weight:101.4,bmi:33.5,pbf:27.9,lbm:73.1,slm:67.3,smm:40.3,tbw:52.6,mineral:5.8,protein:14.7,vfl:14,vfa:143,whr:0.97,ac:104.7,bmr:1670,tee:2572,score:61,balUL:'Balanced',balLR:'Balanced',ecwtbw:0.401,slmLtArm:4.86,slmRtArm:4.90,slmLtLeg:12.44,slmRtLeg:12.60,slmTrunk:32.49,mbfLtArm:1.65,mbfRtArm:1.60,mbfLtLeg:5.25,mbfRtLeg:5.21,mbfTrunk:14.59,analysis:'أول فحص - نقطة البداية. أعلى كتلة عضلية مسجّلة.'},
+    {date:'29/08/2026',weight:98.5,bmi:32.5,pbf:29.5,lbm:69.4,slm:63.8,smm:38.2,tbw:50.0,mineral:5.6,protein:13.8,vfl:14,vfa:158,whr:0.98,ac:105.8,bmr:1620,tee:2495,score:58,balUL:'Balanced',balLR:'Balanced',ecwtbw:0.398,slmLtArm:4.48,slmRtArm:4.49,slmLtLeg:11.77,slmRtLeg:11.88,slmTrunk:31.18,mbfLtArm:1.75,mbfRtArm:1.73,mbfLtLeg:5.34,mbfRtLeg:5.31,mbfTrunk:14.97,analysis:'الوزن نزل لكن نسبة الدهون والدهون الحشوية زادتا - بداية نمط فقدان عضل.'},
+    {date:'05/09/2026',weight:97.1,bmi:32.1,pbf:30.5,lbm:67.5,slm:62.0,smm:37.2,tbw:48.6,mineral:5.5,protein:13.4,vfl:15,vfa:169,whr:1.00,ac:106.5,bmr:1594,tee:2455,score:58,balUL:'Unbalanced',balLR:'Balanced',ecwtbw:0.399,slmLtArm:4.34,slmRtArm:4.40,slmLtLeg:11.30,slmRtLeg:11.59,slmTrunk:30.38,mbfLtArm:1.80,mbfRtArm:1.73,mbfLtLeg:5.46,mbfRtLeg:5.38,mbfTrunk:15.23,analysis:'ثالث قراءة تؤكد فقدان العضل وارتفاع الدهون الحشوية.'},
+    {date:'10/09/2026',weight:96.8,bmi:31.6,pbf:30.1,lbm:67.7,slm:62.1,smm:37.2,tbw:48.7,mineral:5.6,protein:13.4,vfl:15,vfa:165,whr:0.99,ac:105.8,bmr:1602,tee:2467,score:58,balUL:'Balanced',balLR:'Balanced',ecwtbw:0.396,slmLtArm:4.32,slmRtArm:4.31,slmLtLeg:11.52,slmRtLeg:11.56,slmTrunk:30.39,mbfLtArm:1.77,mbfRtArm:1.78,mbfLtLeg:5.30,mbfRtLeg:5.28,mbfTrunk:14.97,analysis:'أول انعكاس إيجابي للاتجاه - دهون وحشوية ومحيط خصر نزلوا.'},
+    {date:'16/09/2026',weight:98.1,bmi:32.4,pbf:29.8,lbm:68.9,slm:63.3,smm:37.9,tbw:49.6,mineral:5.6,protein:13.7,vfl:15,vfa:162,whr:0.99,ac:105.9,bmr:1613,tee:2484,score:58,balUL:'Unbalanced',balLR:'Unbalanced',ecwtbw:0.395,slmLtArm:4.44,slmRtArm:4.51,slmLtLeg:11.67,slmRtLeg:11.97,slmTrunk:30.72,mbfLtArm:1.71,mbfRtArm:1.79,mbfLtLeg:5.36,mbfRtLeg:5.28,mbfTrunk:15.06,analysis:'الوزن زاد لكن الدهون استمرت بالنزول - يبدو زيادة عضل حقيقية.'}
+  ];
+}
+
+loadPersisted();
+</script>
+</body>
+</html>
