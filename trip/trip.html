@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8">
+
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>حاسبة رحلة الشباب</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f6fb; --card:#fff; --ink:#1f2937; --muted:#6b7280; --line:#e5e7eb;
+  --brand:#0f766e; --brand2:#14b8a6; --ok:#16a34a; --okbg:#dcfce7; --bad:#dc2626; --badbg:#fee2e2;
+  --warn:#b45309; --warnbg:#fef3c7;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Cairo',system-ui,sans-serif;font-size:15px}
+header{background:linear-gradient(135deg,#0f766e,#0891b2 60%,#6366f1);color:#fff;padding:22px 16px 56px}
+header .wrap{display:flex;flex-direction:column;gap:6px}
+#title{font-size:24px;font-weight:800;background:transparent;border:0;color:#fff;font-family:inherit;width:100%;padding:0;outline:none}
+#title:focus{border-bottom:2px dashed rgba(255,255,255,.6)}
+.sync{font-size:12px;opacity:.9}
+.wrap{max-width:980px;margin:0 auto}
+main{padding:0 16px 40px;margin-top:-40px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.stat{background:var(--card);border-radius:14px;padding:12px 14px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.stat .l{font-size:12px;color:var(--muted)}
+.stat .v{font-size:22px;font-weight:800}
+.stat .v small{font-size:12px;font-weight:600;color:var(--muted)}
+.card{background:var(--card);border-radius:16px;padding:16px;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:14px}
+.card h2{margin:0 0 12px;font-size:17px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.card h2 .hint{font-size:12px;font-weight:600;color:var(--muted)}
+.item{display:grid;grid-template-columns:28px 1fr 110px 130px 30px;gap:8px;align-items:center;padding:8px 6px;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:0}
+.item.done .name{text-decoration:line-through;color:var(--muted)}
+.item.done{background:#f0fdf4}
+input[type=checkbox]{width:20px;height:20px;accent-color:var(--brand);cursor:pointer}
+input[type=text],input[type=number],select{font-family:inherit;font-size:14px;border:1px solid var(--line);border-radius:10px;padding:7px 9px;width:100%;background:#fff;color:var(--ink)}
+input[type=number]{text-align:center;direction:ltr}
+input:focus,select:focus{outline:2px solid var(--brand2);border-color:transparent}
+.name{border:0!important;background:transparent!important;font-weight:600;padding:4px!important}
+.del{background:none;border:0;color:#9ca3af;font-size:18px;cursor:pointer;padding:0}
+.del:hover{color:var(--bad)}
+.addrow{display:flex;gap:8px;margin-top:10px}
+.btn{font-family:inherit;font-weight:700;font-size:14px;border:0;border-radius:10px;padding:8px 14px;cursor:pointer;background:var(--brand);color:#fff;white-space:nowrap}
+.btn.ghost{background:#eef2ff;color:#3730a3}
+.btn.light{background:#f3f4f6;color:var(--ink)}
+.head{display:grid;grid-template-columns:28px 1fr 110px 130px 30px;gap:8px;padding:0 6px 6px;font-size:12px;color:var(--muted);font-weight:700}
+table{width:100%;border-collapse:collapse}
+th{font-size:12px;color:var(--muted);text-align:right;padding:6px;border-bottom:1px solid var(--line)}
+td{padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr.out td{opacity:.45}
+.pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:13px;font-weight:700;white-space:nowrap}
+.pill.ok{background:var(--okbg);color:var(--ok)}
+.pill.bad{background:var(--badbg);color:var(--bad)}
+.pill.warn{background:var(--warnbg);color:var(--warn)}
+.pname{border:0;background:transparent;font-weight:700;padding:2px;width:100%}
+.num{direction:ltr;text-align:right;font-variant-numeric:tabular-nums}
+.settle{list-style:none;padding:0;margin:0}
+.settle li{padding:8px 10px;border-radius:10px;background:#f8fafc;margin-bottom:6px;display:flex;justify-content:space-between;gap:8px}
+.tools{display:flex;flex-wrap:wrap;gap:8px}
+.muted{color:var(--muted);font-size:13px}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;transition:.3s;pointer-events:none;z-index:9}
+.toast.show{opacity:1}
+@media (max-width:640px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .item,.head{grid-template-columns:24px 1fr 80px 26px}
+  .item .buyer{grid-column:2 / 4}
+  .head .hb{display:none}
+  .item .del{grid-row:1;grid-column:4}
+  td,th{padding:6px 3px;font-size:13px}
+  .hide-sm{display:none}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <input id="title" value="رحلة الشباب">
+    <div class="sync" id="sync">جاري التحميل…</div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="stats">
+    <div class="stat"><div class="l">المجموع الكلي</div><div class="v" id="sTotal">0</div></div>
+    <div class="stat"><div class="l">حصة كل شخص</div><div class="v" id="sShare">0</div></div>
+    <div class="stat"><div class="l">الطلبات المشتراة</div><div class="v" id="sDone">0</div></div>
+    <div class="stat"><div class="l">دفعوا</div><div class="v" id="sPaid">0</div></div>
+  </div>
+
+  <section class="card">
+    <h2>🛒 الطلبات <span class="hint">✔ = تم الشراء · السعر بالدينار</span></h2>
+    <div class="head"><span></span><span>الغرض</span><span>السعر</span><span class="hb">مين اشتراه؟</span><span></span></div>
+    <div id="items"></div>
+    <div class="addrow">
+      <input type="text" id="newItem" placeholder="أضف غرض جديد…">
+      <button class="btn" onclick="addItem()">➕ إضافة</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>👥 الأشخاص والحساب <span class="hint">شيل ✔ "مشارك" عن اللي مش طالع</span></h2>
+    <table>
+      <thead><tr>
+        <th>مشارك</th><th>الاسم</th><th class="hide-sm">اشترى بـ</th><th>الحصة</th><th>الوضع</th><th>دفع؟</th>
+      </tr></thead>
+      <tbody id="people"></tbody>
+    </table>
+    <div class="addrow">
+      <input type="text" id="newPerson" placeholder="أضف شخص…">
+      <button class="btn" onclick="addPerson()">➕ إضافة</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>🤝 مين يدفع لمين</h2>
+    <ul class="settle" id="settle"></ul>
+    <p class="muted" id="settleNote"></p>
+  </section>
+
+  <section class="card">
+    <h2>💾 حفظ ومشاركة</h2>
+    <div class="tools">
+      <button class="btn" onclick="copySummary()">📋 نسخ ملخص للواتساب</button>
+      <button class="btn ghost" onclick="exportJSON()">📥 حفظ نسخة (JSON)</button>
+      <button class="btn ghost" onclick="document.getElementById('imp').click()">📤 استيراد نسخة</button>
+      <button class="btn light" onclick="loadFromServer(true)">🔄 تحديث</button>
+      <input type="file" id="imp" accept=".json,application/json" hidden onchange="importJSON(this)">
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== إعدادات السيرفر (نفس فكرة home.html) =====
+const API_URL = 'trip_api.php';
+const APP_SECRET = '79347f421ecfbbd7e9fbf415';   // لازم يطابق $secret في trip_api.php
+const LS_KEY = 'trip9_data';
+
+const DEFAULT_PEOPLE = ['الشيخ عمر','ابوعزام','حمزه','احمد عوض','ابوميزر','حسن ابو عوده','مهند طوقان','بشار','باسل البطيخي'];
+const DEFAULT_ITEMS = ['محارم','شاي','سكر','زيت زيتون','ملح','دجاج + عصير + شيبس','ماء','صحون + معالق + كاسات','مكسرات','سياخ','لحمه','خبز','بندوره','بصل','بيبسي','مشعل','حمص و فلافل','فحم'];
+
+const uid = () => Math.random().toString(36).slice(2,9);
+function defaults(){
+  return {
+    title:'رحلة الشباب',
+    updatedAt:0,
+    people: DEFAULT_PEOPLE.map(n=>({id:uid(),name:n,in:true,paid:false})),
+    items: DEFAULT_ITEMS.map(n=>({id:uid(),name:n,done:false,price:'',buyer:''}))
+  };
+}
+
+let data = defaults();
+let serverOK = false, saveTimer = null, editing = false;
+
+// ===== أدوات =====
+const $ = id => document.getElementById(id);
+const r2 = n => Math.round((n + Number.EPSILON) * 100) / 100;
+// تحويل الأرقام العربية والفاصلة (كيبورد الآيفون) لأرقام إنجليزية
+const toNum = v => String(v ?? '').replace(/[\u0660-\u0669]/g, d => d.charCodeAt(0) - 0x660).replace(/[\u06F0-\u06F9]/g, d => d.charCodeAt(0) - 0x6F0).replace(/[\u066B,\u060C]/g, '.').replace(/[^0-9.]/g, '');
+const num = v => parseFloat(toNum(v)) || 0;
+const fmt = n => { const v = r2(n); return (Number.isInteger(v) ? v : v.toFixed(2)) ; };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('show'); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),2200); }
+function setSync(t){ $('sync').textContent = t; }
+function personName(id){ const p=data.people.find(p=>p.id===id); return p?p.name:''; }
+
+// ===== الحساب =====
+function calc(){
+  const total = data.items.reduce((s,i)=> s + (num(i.price)||0), 0);
+  const members = data.people.filter(p=>p.in);
+  const share = members.length ? total / members.length : 0;
+  const spent = {};
+  data.people.forEach(p=> spent[p.id]=0);
+  data.items.forEach(i=>{ const v=num(i.price)||0; if(i.buyer && spent[i.buyer]!==undefined) spent[i.buyer]+=v; });
+  const rows = data.people.map(p=>{
+    const sh = p.in ? share : 0;
+    const net = r2(spent[p.id] - sh);  // + له ، - عليه
+    return {p, spent:spent[p.id], share:sh, net};
+  });
+  const unassigned = data.items.reduce((s,i)=> s + ((num(i.price)||0) && !i.buyer ? num(i.price) : 0), 0);
+  return {total, share, members, rows, unassigned};
+}
+
+// تسوية: مين يدفع لمين (أقل عدد تحويلات)
+function settlements(rows){
+  const debt = rows.filter(r=>r.net < -0.004 && !r.p.paid).map(r=>({id:r.p.id, amt:-r.net}));
+  const cred = rows.filter(r=>r.net > 0.004).map(r=>({id:r.p.id, amt:r.net}));
+  // اللي سدّدوا: نطرح حصتهم من الدائنين
+  let paidSum = rows.filter(r=>r.net < -0.004 && r.p.paid).reduce((s,r)=>s-r.net,0);
+  cred.sort((a,b)=>b.amt-a.amt);
+  for(const c of cred){ const t=Math.min(c.amt,paidSum); c.amt-=t; paidSum-=t; }
+  debt.sort((a,b)=>b.amt-a.amt);
+  const out=[]; let i=0,j=0;
+  const cr = cred.filter(c=>c.amt>0.004);
+  while(i<debt.length && j<cr.length){
+    const t = Math.min(debt[i].amt, cr[j].amt);
+    if(t>0.004) out.push({from:debt[i].id,to:cr[j].id,amt:t});
+    debt[i].amt-=t; cr[j].amt-=t;
+    if(debt[i].amt<=0.004) i++;
+    if(cr[j].amt<=0.004) j++;
+  }
+  return out;
+}
+
+// ===== العرض =====
+function render(){
+  $('title').value = data.title || '';
+  document.title = data.title || 'حاسبة الرحلة';
+  renderItems(); renderPeople();
+}
+
+function buyerOptions(sel){
+  return '<option value="">— مين اشتراه؟ —</option>' +
+    data.people.map(p=>`<option value="${p.id}" ${p.id===sel?'selected':''}>${esc(p.name)}</option>`).join('');
+}
+
+function renderItems(){
+  $('items').innerHTML = data.items.map(i=>`
+    <div class="item ${i.done?'done':''}" data-id="${i.id}">
+      <input type="checkbox" ${i.done?'checked':''} onchange="setItem('${i.id}','done',this.checked)" title="تم الشراء">
+      <input type="text" class="name" value="${esc(i.name)}" onchange="setItem('${i.id}','name',this.value)">
+      <input type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" placeholder="0" value="${i.price}" oninput="setItem('${i.id}','price',this.value,true)">
+      <select class="buyer" onchange="setItem('${i.id}','buyer',this.value)">${buyerOptions(i.buyer)}</select>
+      <button class="del" onclick="delItem('${i.id}')" title="حذف">✕</button>
+    </div>`).join('');
+  renderSummary();
+}
+
+function renderPeople(){
+  const {rows} = calc();
+  $('people').innerHTML = rows.map(({p,spent,share,net})=>{
+    let status;
+    if(!p.in) status = '<span class="pill warn">مش مشارك</span>';
+    else if(net > 0.004) status = `<span class="pill ok">له ${fmt(net)}</span>`;
+    else if(net < -0.004) status = p.paid ? `<span class="pill ok">سدّد ${fmt(-net)}</span>` : `<span class="pill bad">عليه ${fmt(-net)}</span>`;
+    else status = '<span class="pill ok">خالص ✓</span>';
+    return `<tr class="${p.in?'':'out'}">
+      <td><input type="checkbox" ${p.in?'checked':''} onchange="setPerson('${p.id}','in',this.checked)"></td>
+      <td><input class="pname" type="text" value="${esc(p.name)}" onchange="setPerson('${p.id}','name',this.value)"></td>
+      <td class="num hide-sm">${spent?fmt(spent):'—'}</td>
+      <td class="num">${p.in?fmt(share):'—'}</td>
+      <td>${status}</td>
+      <td>${net < -0.004 ? `<input type="checkbox" ${p.paid?'checked':''} onchange="setPerson('${p.id}','paid',this.checked)" title="دفع حصته">` : ''}
+          <button class="del" onclick="delPerson('${p.id}')" title="حذف">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderSummary(){
+  const c = calc();
+  $('sTotal').innerHTML = `${fmt(c.total)} <small>د.أ</small>`;
+  $('sShare').innerHTML = `${fmt(c.share)} <small>÷ ${c.members.length}</small>`;
+  const done = data.items.filter(i=>i.done).length;
+  $('sDone').innerHTML = `${done} <small>/ ${data.items.length}</small>`;
+  const owing = c.rows.filter(r=>r.net < -0.004);
+  const paid = owing.filter(r=>r.p.paid).length;
+  $('sPaid').innerHTML = `${paid} <small>/ ${owing.length}</small>`;
+
+  const s = settlements(c.rows);
+  $('settle').innerHTML = s.length
+    ? s.map(x=>`<li><span><b>${esc(personName(x.from))}</b> ← يدفع لـ <b>${esc(personName(x.to))}</b></span><span class="num"><b>${fmt(x.amt)}</b> د.أ</span></li>`).join('')
+    : '<li><span>ما في تحويلات مطلوبة حالياً ✓</span></li>';
+  $('settleNote').textContent = c.unassigned > 0.004
+    ? `⚠️ في أغراض بقيمة ${fmt(c.unassigned)} د.أ ما حددت مين اشتراها — داخلة بالمجموع بس مش محسوبة لحد بالتسوية.`
+    : '';
+}
+
+// ===== التعديل =====
+function setItem(id, key, val, soft){
+  const it = data.items.find(i=>i.id===id); if(!it) return;
+  if(key==='price') val = toNum(val);
+  it[key] = val;
+  if(key==='price' && val!=='' && !it.done){ it.done = true; const row=document.querySelector(`.item[data-id="${id}"]`); if(row){row.classList.add('done'); row.querySelector('input[type=checkbox]').checked=true;} }
+  if(key==='done'){ const row=document.querySelector(`.item[data-id="${id}"]`); row && row.classList.toggle('done', val); }
+  renderSummary(); renderPeople(); save();
+}
+function addItem(){
+  const v = $('newItem').value.trim(); if(!v) return;
+  data.items.push({id:uid(),name:v,done:false,price:'',buyer:''});
+  $('newItem').value=''; renderItems(); renderPeople(); save();
+}
+function delItem(id){
+  const it=data.items.find(i=>i.id===id);
+  if(!confirmSoft(`حذف "${it.name}"؟`)) return;
+  data.items = data.items.filter(i=>i.id!==id); renderItems(); renderPeople(); save();
+}
+function setPerson(id, key, val){
+  const p = data.people.find(p=>p.id===id); if(!p) return;
+  p[key] = val;
+  if(key==='name'){ renderItems(); }
+  renderPeople(); renderSummary(); save();
+}
+function addPerson(){
+  const v = $('newPerson').value.trim(); if(!v) return;
+  data.people.push({id:uid(),name:v,in:true,paid:false});
+  $('newPerson').value=''; render(); save();
+}
+function delPerson(id){
+  const p=data.people.find(p=>p.id===id);
+  if(!confirmSoft(`حذف "${p.name}"؟`)) return;
+  data.people = data.people.filter(x=>x.id!==id);
+  data.items.forEach(i=>{ if(i.buyer===id) i.buyer=''; });
+  render(); save();
+}
+// تأكيد بالضغط مرتين بدل نافذة confirm
+let _pending=null;
+function confirmSoft(msg){
+  if(_pending===msg){ _pending=null; return true; }
+  _pending=msg; toast(msg+' — اضغط مرة ثانية للتأكيد'); setTimeout(()=>{ if(_pending===msg) _pending=null; },3000);
+  return false;
+}
+$('title').addEventListener('change', e=>{ data.title=e.target.value; document.title=data.title; save(); });
+$('newItem').addEventListener('keydown', e=>{ if(e.key==='Enter') addItem(); });
+$('newPerson').addEventListener('keydown', e=>{ if(e.key==='Enter') addPerson(); });
+document.addEventListener('focusin', ()=> editing=true);
+document.addEventListener('focusout', ()=> editing=false);
+
+// ===== الحفظ: localStorage + السيرفر (JSON) =====
+function saveLocal(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(data)); }catch(e){} }
+function save(){
+  saveLocal();
+  clearTimeout(saveTimer);
+  setSync('💾 جاري الحفظ…');
+  saveTimer = setTimeout(saveToServer, 700);
+}
+async function saveToServer(){
+  try{
+    const res = await fetch(`${API_URL}?secret=${encodeURIComponent(APP_SECRET)}`, {
+      method:'POST', headers:{'Content-Type':'application/json','X-App-Secret':APP_SECRET},
+      body: JSON.stringify({base:data.updatedAt||0, data})
+    });
+    if(res.status===409){
+      const j = await res.json();
+      data = j.data; saveLocal(); render();
+      setSync('⚠️ حدا ثاني عدّل بنفس الوقت — تم جلب آخر نسخة، أعد آخر تعديل');
+      toast('في تعديل من شخص ثاني، تم التحديث');
+      return;
+    }
+    if(!res.ok) throw new Error(res.status);
+    const j = await res.json();
+    data.updatedAt = j.updatedAt; saveLocal(); serverOK = true;
+    setSync('✅ محفوظ على السيرفر · ' + new Date().toLocaleTimeString('ar-JO',{hour:'2-digit',minute:'2-digit'}));
+  }catch(e){
+    serverOK = false;
+    setSync('📱 محفوظ على هذا الجهاز فقط (السيرفر مش متاح)');
+  }
+}
+async function loadFromServer(manual){
+  try{
+    const res = await fetch(`${API_URL}?secret=${encodeURIComponent(APP_SECRET)}`, {cache:'no-store', headers:{'X-App-Secret':APP_SECRET}});
+    if(!res.ok) throw new Error(res.status);
+    const j = await res.json();
+    if(j && Array.isArray(j.people) && Array.isArray(j.items)){
+      if(!manual && j.updatedAt === data.updatedAt) { serverOK=true; return; }
+      data = j; saveLocal(); render();
+    } else if(manual===undefined || manual===false){
+      // السيرفر فاضي: ارفع النسخة الحالية
+      saveToServer();
+    }
+    serverOK = true;
+    setSync('✅ متزامن مع السيرفر · ' + new Date().toLocaleTimeString('ar-JO',{hour:'2-digit',minute:'2-digit'}));
+    if(manual) toast('تم التحديث');
+  }catch(e){
+    serverOK = false;
+    setSync('📱 محفوظ على هذا الجهاز فقط (السيرفر مش متاح)');
+    if(manual) toast('السيرفر مش متاح');
+  }
+}
+
+// ===== JSON / واتساب =====
+function exportJSON(){
+  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  const d = new Date().toISOString().slice(0,10);
+  a.href = URL.createObjectURL(blob); a.download = `backup-trip-${d}.json`; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function importJSON(input){
+  const f = input.files[0]; if(!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try{
+      const j = JSON.parse(rd.result);
+      if(!Array.isArray(j.people) || !Array.isArray(j.items)) throw 0;
+      j.updatedAt = data.updatedAt; data = j; render(); save(); toast('تم استيراد النسخة');
+    }catch(e){ toast('الملف مش صالح'); }
+    input.value='';
+  };
+  rd.readAsText(f);
+}
+function copySummary(){
+  const c = calc();
+  let t = `*${data.title}*\n\n🛒 الطلبات:\n`;
+  data.items.forEach(i=>{ const v=num(i.price)||0; t += `${i.done?'✅':'⬜'} ${i.name}${v?` — ${fmt(v)} د.أ`:''}${i.buyer?` (${personName(i.buyer)})`:''}\n`; });
+  t += `\n💰 المجموع: ${fmt(c.total)} د.أ\n👥 العدد: ${c.members.length}\n➗ حصة كل واحد: ${fmt(c.share)} د.أ\n\n`;
+  t += `📊 الحساب:\n`;
+  c.rows.filter(r=>r.p.in).forEach(r=>{
+    const s = r.net>0.004 ? `له ${fmt(r.net)}` : r.net<-0.004 ? (r.p.paid?`✅ دفع ${fmt(-r.net)}`:`❌ عليه ${fmt(-r.net)}`) : 'خالص ✓';
+    t += `• ${r.p.name}: ${s}\n`;
+  });
+  const s = settlements(c.rows);
+  if(s.length){ t += `\n🤝 التحويلات:\n`; s.forEach(x=> t += `${personName(x.from)} ← ${personName(x.to)}: ${fmt(x.amt)} د.أ\n`); }
+  (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject())
+    .then(()=>toast('تم نسخ الملخص 👍'))
+    .catch(()=>{ const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');toast('تم نسخ الملخص 👍');}catch(e){} ta.remove(); });
+}
+
+// ===== التشغيل =====
+(function init(){
+  try{ const s = localStorage.getItem(LS_KEY); if(s){ const j=JSON.parse(s); if(j.people&&j.items) data=j; } }catch(e){}
+  render();
+  loadFromServer(false);
+  // تحديث تلقائي كل 20 ثانية عشان الكل يشوف نفس الشي
+  setInterval(()=>{ if(!editing && !saveTimer_pending()) loadFromServer(false); }, 20000);
+})();
+function saveTimer_pending(){ return $('sync').textContent.startsWith('💾'); }
+</script>
+</body>
+</html>
