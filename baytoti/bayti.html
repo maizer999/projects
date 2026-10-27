@@ -603,12 +603,12 @@
 
       <!-- التبويبات -->
       <div class="tabs">
-        <button class="tab active" data-tab="purchases">المشتريات</button>
-        <button class="tab" data-tab="needs">النواقص</button>
+        <button class="tab active" data-tab="needs">النواقص</button>
+        <button class="tab" data-tab="purchases">المشتريات</button>
       </div>
 
       <!-- تبويب المشتريات -->
-      <div class="tab-content active" id="purchasesTab">
+      <div class="tab-content" id="purchasesTab">
         <div class="filter-bar">
           <button class="chip active" data-filter="week">هذا الأسبوع</button>
           <button class="chip" data-filter="all">الكل</button>
@@ -623,7 +623,7 @@
       </div>
 
       <!-- تبويب النواقص -->
-      <div class="tab-content" id="needsTab">
+      <div class="tab-content active" id="needsTab">
         <div class="filter-bar">
           <button class="btn-add-inline" id="addNeedInlineBtn">
             <span>＋</span> إضافة عنصر
@@ -722,7 +722,7 @@
     let purchases = [];           // [{ id, itemName, price, category, addedByName, date }]
     let wishlist = [];            // [{ id, itemName, addedByName, status, createdAt }]
 
-    let currentTab = 'purchases'; // 'purchases' | 'needs'
+    let currentTab = 'needs'; // 'purchases' | 'needs'
     let currentFilter = 'week';   // 'week' | 'all'
 
     let editingPurchaseId = null; // null = إضافة جديدة
