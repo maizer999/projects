@@ -278,6 +278,76 @@
       cursor: pointer;
     }
 
+    /* بطاقة ملخّص المشتريات */
+    .purchase-summary {
+      display: flex;
+      gap: 0.8rem;
+      background: #f0ebe3;
+      border: 1px solid #e3dacd;
+      border-radius: 18px;
+      padding: 0.9rem 1rem;
+    }
+
+    .summary-cell {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      align-items: flex-start;
+    }
+
+    .summary-cell + .summary-cell {
+      border-inline-start: 1px solid #e3dacd;
+      padding-inline-start: 0.9rem;
+    }
+
+    .summary-label {
+      font-size: 0.78rem;
+      color: #8a7e74;
+      font-weight: 500;
+    }
+
+    .summary-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #2d5a4b;
+    }
+
+    /* صفوف السجل الأسبوعي */
+    .history-row {
+      cursor: default;
+    }
+
+    .history-row .item-info {
+      gap: 0.3rem;
+    }
+
+    .history-week-label {
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: #2e2b28;
+    }
+
+    .history-week-range {
+      font-size: 0.78rem;
+      color: #8a7e74;
+    }
+
+    .history-stats {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.15rem;
+      font-weight: 700;
+      color: #2d5a4b;
+    }
+
+    .history-stats .history-count {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #8a7e74;
+    }
+
     /* قائمة العناصر */
     .item-list {
       display: flex;
@@ -605,6 +675,7 @@
       <div class="tabs">
         <button class="tab active" data-tab="needs">النواقص</button>
         <button class="tab" data-tab="purchases">المشتريات</button>
+        <button class="tab" data-tab="history">السجل</button>
       </div>
 
       <!-- تبويب المشتريات -->
@@ -613,12 +684,33 @@
           <button class="chip active" data-filter="week">هذا الأسبوع</button>
           <button class="chip" data-filter="all">الكل</button>
         </div>
+        <div class="purchase-summary" id="purchasesSummary">
+          <div class="summary-cell">
+            <span class="summary-label">عدد العناصر</span>
+            <span class="summary-value" id="summaryCount">0</span>
+          </div>
+          <div class="summary-cell">
+            <span class="summary-label">المجموع</span>
+            <span class="summary-value"><span id="summaryTotal">0.00</span> د.أ</span>
+          </div>
+        </div>
         <div class="item-list" id="purchasesList">
           <!-- تُملأ ديناميكياً -->
         </div>
         <div class="empty-state" id="purchasesEmpty" style="display:none;">
           <span class="big-emoji">🛒</span>
           لا توجد مشتريات هذا الأسبوع — أضف أول مشترى
+        </div>
+      </div>
+
+      <!-- تبويب السجل -->
+      <div class="tab-content" id="historyTab">
+        <div class="item-list" id="historyList">
+          <!-- تُملأ ديناميكياً -->
+        </div>
+        <div class="empty-state" id="historyEmpty" style="display:none;">
+          <span class="big-emoji">📅</span>
+          لا توجد مشتريات مسجّلة بعد
         </div>
       </div>
 
@@ -767,10 +859,15 @@
     const tabBtns = document.querySelectorAll('.tab');
     const purchasesTab = document.getElementById('purchasesTab');
     const needsTab = document.getElementById('needsTab');
+    const historyTab = document.getElementById('historyTab');
     const purchasesList = document.getElementById('purchasesList');
     const needsList = document.getElementById('needsList');
+    const historyList = document.getElementById('historyList');
     const purchasesEmpty = document.getElementById('purchasesEmpty');
     const needsEmpty = document.getElementById('needsEmpty');
+    const historyEmpty = document.getElementById('historyEmpty');
+    const summaryCount = document.getElementById('summaryCount');
+    const summaryTotal = document.getElementById('summaryTotal');
     const addNeedInlineBtn = document.getElementById('addNeedInlineBtn');
 
     const filterChips = document.querySelectorAll('.chip[data-filter]');
@@ -984,6 +1081,15 @@
     function renderAll() {
       renderPurchases();
       renderNeeds();
+      renderHistory();
+    }
+
+    // ---------- بداية الأسبوع (الأحد 00:00) ----------
+    function sundayStart(d) {
+      const s = new Date(d);
+      s.setHours(0, 0, 0, 0);
+      s.setDate(s.getDate() - s.getDay());
+      return s;
     }
 
     // ---------- فلترة المشتريات ----------
@@ -1007,6 +1113,11 @@
       const filtered = getFilteredPurchases();
       // الأحدث أولاً
       const sorted = [...filtered].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      // تحديث الملخّص (العدد والمجموع)
+      const total = sorted.reduce((sum, p) => sum + (typeof p.price === 'number' ? p.price : 0), 0);
+      if (summaryCount) summaryCount.textContent = sorted.length;
+      if (summaryTotal) summaryTotal.textContent = total.toFixed(2);
 
       purchasesList.innerHTML = '';
 
@@ -1113,6 +1224,63 @@
       }
     }
 
+    // ---------- عرض السجل الأسبوعي ----------
+    function renderHistory() {
+      if (!historyList) return;
+
+      // تجميع المشتريات حسب أسبوعها (الأحد)
+      const groups = new Map(); // key: ms of Sunday → { start, count, total }
+      purchases.forEach(p => {
+        const start = sundayStart(new Date(p.date));
+        const key = start.getTime();
+        const bucket = groups.get(key) || { start, count: 0, total: 0 };
+        bucket.count += 1;
+        if (typeof p.price === 'number') bucket.total += p.price;
+        groups.set(key, bucket);
+      });
+
+      // الأحدث أولاً
+      const weeks = [...groups.values()].sort((a, b) => b.start - a.start);
+
+      historyList.innerHTML = '';
+
+      if (weeks.length === 0) {
+        historyEmpty.style.display = 'block';
+        historyList.style.display = 'none';
+        return;
+      }
+
+      historyEmpty.style.display = 'none';
+      historyList.style.display = 'flex';
+
+      const todayStart = sundayStart(new Date()).getTime();
+
+      weeks.forEach(w => {
+        const end = new Date(w.start);
+        end.setDate(end.getDate() + 6);
+
+        const startStr = w.start.toLocaleDateString('ar-EG', { day: 'numeric', month: 'short' });
+        const endStr = end.toLocaleDateString('ar-EG', { day: 'numeric', month: 'short', year: 'numeric' });
+
+        const isCurrent = w.start.getTime() === todayStart;
+        const label = isCurrent ? 'هذا الأسبوع' : `أسبوع ${startStr}`;
+
+        const row = document.createElement('div');
+        row.className = 'list-item history-row';
+        row.innerHTML = `
+          <div class="item-info">
+            <span class="history-week-label">${label}</span>
+            <span class="history-week-range">${startStr} — ${endStr}</span>
+          </div>
+          <div class="history-stats">
+            <span>${w.total.toFixed(2)} د.أ</span>
+            <span class="history-count">${w.count} عنصر</span>
+          </div>
+        `;
+        historyList.appendChild(row);
+      });
+    }
+
     // دالة مساعدة لمنع XSS
     function escapeHtml(text) {
       const div = document.createElement('div');
@@ -1129,12 +1297,20 @@
         tabBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
 
+        purchasesTab.classList.remove('active');
+        needsTab.classList.remove('active');
+        historyTab.classList.remove('active');
+
         if (tab === 'purchases') {
           purchasesTab.classList.add('active');
-          needsTab.classList.remove('active');
+          fabBtn.style.display = '';
+        } else if (tab === 'history') {
+          historyTab.classList.add('active');
+          fabBtn.style.display = 'none';
+          renderHistory();
         } else {
           needsTab.classList.add('active');
-          purchasesTab.classList.remove('active');
+          fabBtn.style.display = '';
         }
         currentTab = tab;
       });
