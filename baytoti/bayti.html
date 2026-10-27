@@ -824,6 +824,9 @@
     // ---------- قائمة المنتجات الجاهزة (اسم ← سعر بالدينار) ----------
     // تُحدَّث من Google Sheet عند التحميل، والقائمة التالية احتياطية في حال الفشل
     const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/12xFYUN9pGX3dXcRVwFVzzUqupXur3pEuJy9a9gby4jQ/export?format=csv';
+
+    // Google Apps Script Web App URL — رابط النشر الخاص بالقائمة
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwsBYODDi3stb3ORDedJ5N1ncetKOlOfb-F5I6bDQBdF3rH26Ig9Me2vFelLCV3ib1q/exec';
     let PRODUCTS = [
       { name: 'ريو جاردنز طن قطع لحم تونة', price: 0.700 },
       { name: 'زلوم حمص حب 380غم', price: 0.330 },
@@ -939,6 +942,36 @@
       }
       if (field.length || row.length) { row.push(field); rows.push(row); }
       return rows;
+    }
+
+    // ---------- مزامنة المشتريات مع Google Sheet ----------
+    function syncPurchase(action, payload) {
+      if (!WEB_APP_URL || !currentListId) return;
+      const body = Object.assign({ action, listId: currentListId }, payload || {});
+      // text/plain (default) يتجنّب preflight CORS
+      fetch(WEB_APP_URL, {
+        method: 'POST',
+        body: JSON.stringify(body),
+        redirect: 'follow',
+        mode: 'cors'
+      }).catch(err => console.warn('sync failed', action, err));
+    }
+
+    async function loadPurchasesFromSheet() {
+      if (!WEB_APP_URL || !currentListId) return;
+      try {
+        const url = `${WEB_APP_URL}?listId=${encodeURIComponent(currentListId)}&t=${Date.now()}`;
+        const res = await fetch(url, { redirect: 'follow' });
+        if (!res.ok) throw new Error('fetch failed');
+        const json = await res.json();
+        if (!json.ok || !Array.isArray(json.data)) throw new Error('bad payload');
+        purchases = json.data;
+        saveListToStorage();
+        renderPurchases();
+        renderHistory();
+      } catch (err) {
+        console.warn('تعذّر تحميل المشتريات من Google Sheet، سيُستخدم المحلي.', err);
+      }
     }
 
     async function loadProductsFromSheet() {
@@ -1070,6 +1103,9 @@
 
       // عرض المحتوى
       renderAll();
+
+      // جلب أحدث مشتريات من Google Sheet (في الخلفية)
+      loadPurchasesFromSheet();
 
       // إذا لم يكن هناك اسم مخزن، أظهر نافذة الاسم
       if (!hasDisplayName()) {
@@ -1399,18 +1435,20 @@
           p.price = price;
           p.category = purchaseCategory.value;
           saveListToStorage();
+          syncPurchase('update', { purchase: p });
           showToast('✅ تم التعديل');
         }
       } else {
         // إضافة جديدة (أو تحويل عنصر من النواقص إلى مشترى)
-        purchases.push({
+        const newPurchase = {
           id: generateId(12),
           itemName: name,
           price: price,
           category: purchaseCategory.value,
           addedByName: getDisplayName(),
           date: new Date().toISOString()
-        });
+        };
+        purchases.push(newPurchase);
 
         if (convertingNeedId) {
           // احذف العنصر من قائمة النواقص بعد تسجيله كمشترى
@@ -1421,6 +1459,7 @@
         }
 
         saveListToStorage();
+        syncPurchase('add', { purchase: newPurchase });
       }
 
       const wasConverting = convertingNeedId !== null;
@@ -1483,6 +1522,7 @@
 
       if (type === 'purchase') {
         purchases = purchases.filter(p => p.id !== id);
+        syncPurchase('delete', { id });
       } else if (type === 'need') {
         wishlist = wishlist.filter(w => w.id !== id);
       }
