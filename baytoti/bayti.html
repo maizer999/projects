@@ -730,8 +730,9 @@
     let convertingNeedId = null;  // عند تأكيد شراء عنصر من النواقص، يحمل id العنصر حتى يُحذف من النواقص بعد الحفظ
 
     // ---------- قائمة المنتجات الجاهزة (اسم ← سعر بالدينار) ----------
-    // يمكن اختيار منتج من القائمة أو كتابة اسم جديد غير موجود فيها
-    const PRODUCTS = [
+    // تُحدَّث من Google Sheet عند التحميل، والقائمة التالية احتياطية في حال الفشل
+    const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/12xFYUN9pGX3dXcRVwFVzzUqupXur3pEuJy9a9gby4jQ/export?format=csv';
+    let PRODUCTS = [
       { name: 'ريو جاردنز طن قطع لحم تونة', price: 0.700 },
       { name: 'زلوم حمص حب 380غم', price: 0.330 },
       { name: 'سمك سردين بزيت دوار الشمس', price: 0.490 },
@@ -819,6 +820,50 @@
     // يبحث عن منتج جاهز بالاسم (مطابقة تامة) لإرجاع سعره
     function findProductByName(name) {
       return PRODUCTS.find(p => p.name === name) || null;
+    }
+
+    // ---------- تحميل القائمة من Google Sheet ----------
+    // ينتظر CSV بترويسات: م, اسم المادة, السعر
+    function parseCSV(text) {
+      const rows = [];
+      let i = 0, field = '', row = [], inQuotes = false;
+      while (i < text.length) {
+        const c = text[i];
+        if (inQuotes) {
+          if (c === '"' && text[i + 1] === '"') { field += '"'; i += 2; continue; }
+          if (c === '"') { inQuotes = false; i++; continue; }
+          field += c; i++; continue;
+        }
+        if (c === '"') { inQuotes = true; i++; continue; }
+        if (c === ',') { row.push(field); field = ''; i++; continue; }
+        if (c === '\r') { i++; continue; }
+        if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; i++; continue; }
+        field += c; i++;
+      }
+      if (field.length || row.length) { row.push(field); rows.push(row); }
+      return rows;
+    }
+
+    async function loadProductsFromSheet() {
+      try {
+        const res = await fetch(SHEET_CSV_URL, { cache: 'no-store' });
+        if (!res.ok) throw new Error('fetch failed');
+        const text = await res.text();
+        const rows = parseCSV(text).filter(r => r.length >= 2 && r.some(c => c && c.trim()));
+        if (rows.length < 2) throw new Error('empty sheet');
+        // تخطَّ الترويسة
+        const items = rows.slice(1).map(r => {
+          const name = (r[1] || '').trim();
+          const price = parseFloat((r[2] || '').trim());
+          return { name, price: isNaN(price) ? null : price };
+        }).filter(p => p.name);
+        if (items.length) {
+          PRODUCTS = items;
+          populateProductsDatalist();
+        }
+      } catch (err) {
+        console.warn('تعذّر تحميل قائمة المنتجات من Google Sheet، سيُستخدم الاحتياطي.', err);
+      }
     }
 
     // ---------- أدوات مساعدة ----------
@@ -1395,6 +1440,7 @@
     // ---------- التهيئة عند تحميل الصفحة ----------
     (function init() {
       populateProductsDatalist();
+      loadProductsFromSheet();
 
       const params = new URLSearchParams(window.location.search);
       const listId = params.get('list');
