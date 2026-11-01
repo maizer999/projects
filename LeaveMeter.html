@@ -1,0 +1,540 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>نهاية السنة</title>
+<style>
+/* Layout: a single centered card — big countdown numbers up top, vacation input below, result at the bottom */
+:root{
+  --bg:#f3f1ec;
+  --surface:#ffffff;
+  --ink:#1f2420;
+  --ink-dim:#6b7268;
+  --accent:#2f6f4f;
+  --accent-soft:#e3efe6;
+  --line:#e1ddd2;
+  --warn:#b4552f;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#151815;
+    --surface:#1d211d;
+    --ink:#eceae3;
+    --ink-dim:#9aa196;
+    --accent:#6fc294;
+    --accent-soft:#223229;
+    --line:#2b3029;
+    --warn:#e2946c;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#151815;
+  --surface:#1d211d;
+  --ink:#eceae3;
+  --ink-dim:#9aa196;
+  --accent:#6fc294;
+  --accent-soft:#223229;
+  --line:#2b3029;
+  --warn:#e2946c;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:"Tajawal","Segoe UI",Tahoma,sans-serif;
+  direction:rtl;
+  padding-inline:max(16px, env(safe-area-inset-left,0px)) max(16px, env(safe-area-inset-right,0px));
+  padding-block:32px 48px;
+  min-height:100%;
+  display:flex;
+  justify-content:center;
+}
+
+.wrap{
+  width:100%;
+  max-width:460px;
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+
+.eyebrow{
+  font-family:"Cairo",sans-serif;
+  font-size:13px;
+  letter-spacing:0.04em;
+  color:var(--ink-dim);
+  text-align:center;
+}
+
+h1{
+  font-family:"Cairo",sans-serif;
+  font-size:22px;
+  font-weight:700;
+  text-align:center;
+  margin:0 0 4px;
+  text-wrap:balance;
+}
+
+.hero-date{
+  text-align:center;
+  font-variant-numeric:tabular-nums;
+  color:var(--ink-dim);
+  font-size:14px;
+  margin-bottom:4px;
+}
+
+.stat-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.stat{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:18px 14px;
+  text-align:center;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  min-width:0;
+}
+
+.stat .num{
+  font-family:"Cairo",sans-serif;
+  font-size:38px;
+  font-weight:800;
+  font-variant-numeric:tabular-nums;
+  color:var(--accent);
+  line-height:1;
+}
+
+.stat .label{
+  font-size:13px;
+  color:var(--ink-dim);
+}
+
+.card{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+
+.field-label{
+  font-size:14px;
+  font-weight:700;
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  gap:8px;
+}
+
+.field-label .hint{
+  font-weight:400;
+  font-size:12px;
+  color:var(--ink-dim);
+}
+
+.input-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+input[type="number"]{
+  flex:1;
+  min-width:0;
+  font-family:inherit;
+  font-size:20px;
+  font-variant-numeric:tabular-nums;
+  text-align:center;
+  background:var(--bg);
+  color:var(--ink);
+  border:1.5px solid var(--line);
+  border-radius:12px;
+  padding:10px 12px;
+  -moz-appearance:textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button{
+  -webkit-appearance:none;
+  margin:0;
+}
+input[type="number"]:focus{
+  outline:2px solid var(--accent);
+  outline-offset:1px;
+  border-color:var(--accent);
+}
+
+.stepper{
+  display:flex;
+  gap:6px;
+}
+.stepper button{
+  width:38px;
+  height:38px;
+  border-radius:10px;
+  border:1.5px solid var(--line);
+  background:var(--bg);
+  color:var(--ink);
+  font-size:18px;
+  font-family:inherit;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:background .15s, border-color .15s;
+}
+.stepper button:hover{ border-color:var(--accent); }
+.stepper button:active{ background:var(--accent-soft); }
+.stepper button:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+.toggle-row{
+  display:flex;
+  gap:8px;
+}
+.toggle-row button{
+  flex:1;
+  font-family:"Cairo",sans-serif;
+  font-size:15px;
+  font-weight:700;
+  font-variant-numeric:tabular-nums;
+  padding:10px 8px;
+  border-radius:12px;
+  border:1.5px solid var(--line);
+  background:var(--bg);
+  color:var(--ink-dim);
+  cursor:pointer;
+  transition:background .15s, border-color .15s, color .15s;
+}
+.toggle-row button:hover{ border-color:var(--accent); }
+.toggle-row button:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.toggle-row button[aria-pressed="true"]{
+  background:var(--accent-soft);
+  border-color:var(--accent);
+  color:var(--accent);
+}
+
+.accrual-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  padding-top:4px;
+  border-top:1px solid var(--line);
+}
+.accrual-row .accrual-label{
+  font-size:13px;
+  color:var(--ink-dim);
+}
+.accrual-row .accrual-value{
+  font-family:"Cairo",sans-serif;
+  font-size:20px;
+  font-weight:800;
+  font-variant-numeric:tabular-nums;
+  color:var(--accent);
+}
+
+.explain{
+  font-size:12.5px;
+  color:var(--ink-dim);
+  line-height:1.7;
+  background:var(--bg);
+  border-radius:10px;
+  padding:10px 12px;
+}
+.explain b{
+  color:var(--ink);
+  font-variant-numeric:tabular-nums;
+}
+
+.months-row{
+  display:grid;
+  grid-template-columns:repeat(12, 1fr);
+  gap:3px;
+}
+.months-row .m{
+  height:20px;
+  border-radius:4px;
+  background:var(--bg);
+  border:1px solid var(--line);
+}
+.months-row .m.done{
+  background:var(--accent);
+  border-color:var(--accent);
+}
+.months-row .m.current{
+  border-color:var(--accent);
+  border-width:2px;
+}
+
+.divider{
+  height:1px;
+  background:var(--line);
+  border:none;
+  margin:2px 0;
+}
+
+.track{
+  height:6px;
+  border-radius:999px;
+  background:var(--bg);
+  border:1px solid var(--line);
+  overflow:hidden;
+}
+.track-fill{
+  height:100%;
+  background:var(--accent);
+  border-radius:999px;
+  transition:width .25s ease;
+}
+
+.result{
+  background:var(--accent-soft);
+  border-radius:14px;
+  padding:18px;
+  text-align:center;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.result .num{
+  font-family:"Cairo",sans-serif;
+  font-size:44px;
+  font-weight:800;
+  font-variant-numeric:tabular-nums;
+  color:var(--accent);
+  line-height:1;
+}
+
+.result .label{
+  font-size:14px;
+  color:var(--ink);
+  font-weight:600;
+}
+
+.breakdown{
+  font-size:12.5px;
+  color:var(--ink-dim);
+  text-align:center;
+  line-height:1.7;
+}
+
+.note{
+  font-size:12px;
+  color:var(--ink-dim);
+  text-align:center;
+  line-height:1.6;
+}
+
+@media (max-width:360px){
+  .stat .num{ font-size:32px; }
+  .result .num{ font-size:38px; }
+}
+</style>
+
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;800&family=Tajawal:wght@400;500;700&display=swap">
+
+<div class="wrap">
+  <div class="eyebrow">عدّاد نهاية السنة</div>
+  <h1>كم باقي على 2026</h1>
+  <div class="hero-date" id="todayLabel"></div>
+
+  <div class="stat-row">
+    <div class="stat">
+      <div class="num" id="daysLeft">—</div>
+      <div class="label">يوم متبقي بالتقويم</div>
+    </div>
+    <div class="stat">
+      <div class="num" id="workDaysLeft">—</div>
+      <div class="label">يوم عمل (أحد–خميس)</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="field-label">
+      <span>رصيد الإجازة السنوي</span>
+      <span class="hint">حسب نظام الموظف</span>
+    </div>
+    <div class="toggle-row">
+      <button type="button" id="entitlement21" aria-pressed="true">21 يوم</button>
+      <button type="button" id="entitlement14" aria-pressed="false">14 يوم</button>
+    </div>
+
+    <div class="explain" id="explainText"></div>
+
+    <div class="months-row" id="monthsRow"></div>
+
+    <div class="accrual-row">
+      <span class="accrual-label">رصيد متراكم حتى اليوم</span>
+      <span class="accrual-value" id="accruedValue">—</span>
+    </div>
+    <div class="track"><div class="track-fill" id="accruedTrack"></div></div>
+
+    <hr class="divider">
+
+    <div class="field-label">
+      <span>كم يوم أخذت فعلياً من بداية السنة؟</span>
+      <span class="hint">لو ما أخذت شي، سيبها صفر</span>
+    </div>
+    <div class="input-row">
+      <div class="stepper">
+        <button type="button" id="minus" aria-label="إنقاص">−</button>
+        <button type="button" id="plus" aria-label="زيادة">+</button>
+      </div>
+      <input type="number" id="taken" inputmode="decimal" step="0.5" min="0" value="0" aria-label="عدد أيام الإجازة المأخوذة">
+    </div>
+
+    <div class="accrual-row">
+      <span class="accrual-label">الرصيد المتبقي لك فعلاً (بعد المأخوذ)</span>
+      <span class="accrual-value" id="netValue">—</span>
+    </div>
+  </div>
+
+  <div class="result">
+    <div class="label">يوم عمل فعلي متبقي بعد خصم رصيدك المتبقي</div>
+    <div class="num" id="finalResult">—</div>
+    <div class="breakdown" id="breakdownLabel"></div>
+  </div>
+
+  <div class="note">الحساب بافتراض أسبوع العمل الأردني (الأحد إلى الخميس)، شاملاً اليوم الحالي.</div>
+</div>
+
+<script>
+(function(){
+  var YEAR_START = new Date(2026, 0, 1);  // Jan 1, 2026 local
+  var YEAR_END = new Date(2026, 11, 31);  // Dec 31, 2026 local
+
+  function startOfDay(d){
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+
+  function computeDays(){
+    var today = startOfDay(new Date());
+    var start = startOfDay(YEAR_START);
+    var end = startOfDay(YEAR_END);
+
+    var msPerDay = 24*60*60*1000;
+    var calendarDays = Math.round((end - today) / msPerDay) + 1; // inclusive of today
+    if (calendarDays < 0) calendarDays = 0;
+
+    var workDays = 0;
+    var cursor = new Date(today);
+    for (var i = 0; i < calendarDays; i++){
+      var dow = cursor.getDay(); // 0 = Sunday ... 6 = Saturday
+      if (dow !== 5 && dow !== 6) workDays++; // exclude Friday(5), Saturday(6)
+      cursor.setDate(cursor.getDate() + 1);
+    }
+
+    var totalSpan = Math.round((end - start) / msPerDay); // days between Jan 1 and Dec 31
+    var elapsed = Math.round((today - start) / msPerDay);
+    var yearFraction = totalSpan > 0 ? elapsed / totalSpan : 0;
+    if (yearFraction < 0) yearFraction = 0;
+    if (yearFraction > 1) yearFraction = 1;
+
+    var monthsElapsed = today.getMonth() + (today.getDate() - 1) / 30.4; // ~0 on Jan 1, ~11 in late Dec
+
+    return { calendarDays: calendarDays, workDays: workDays, today: today, yearFraction: yearFraction, monthsElapsed: monthsElapsed };
+  }
+
+  var data = computeDays();
+
+  var dateFmt = new Intl.DateTimeFormat('ar-JO', { day:'numeric', month:'long', year:'numeric' });
+  document.getElementById('todayLabel').textContent = 'اليوم: ' + dateFmt.format(data.today);
+  document.getElementById('daysLeft').textContent = data.calendarDays;
+  document.getElementById('workDaysLeft').textContent = data.workDays;
+
+  var finalResult = document.getElementById('finalResult');
+  var breakdownLabel = document.getElementById('breakdownLabel');
+  var accruedValue = document.getElementById('accruedValue');
+  var accruedTrack = document.getElementById('accruedTrack');
+  var netValue = document.getElementById('netValue');
+  var explainText = document.getElementById('explainText');
+  var monthsRow = document.getElementById('monthsRow');
+  var btn21 = document.getElementById('entitlement21');
+  var btn14 = document.getElementById('entitlement14');
+  var takenInput = document.getElementById('taken');
+  var minusBtn = document.getElementById('minus');
+  var plusBtn = document.getElementById('plus');
+
+  var entitlement = 21;
+
+  // build the 12 month ticks once
+  var currentMonthIndex = data.today.getMonth();
+  for (var m = 0; m < 12; m++){
+    var cell = document.createElement('div');
+    cell.className = 'm';
+    if (m < currentMonthIndex) cell.className += ' done';
+    if (m === currentMonthIndex) cell.className += ' current';
+    monthsRow.appendChild(cell);
+  }
+
+  function fmtNum(n){
+    // show without trailing .0, but keep .5 etc
+    return (Math.round(n * 100) / 100).toString();
+  }
+
+  function update(){
+    var monthlyRate = entitlement / 12;
+    var accrued = entitlement * data.yearFraction;
+
+    explainText.innerHTML =
+      'يعني كل شهر يتجمعلك تقريباً <b>' + fmtNum(monthlyRate) + '</b> يوم من رصيدك. ' +
+      'إحنا الآن بالشهر رقم <b>' + (currentMonthIndex + 1) + '</b> من 12، فتراكم عندك لهلق تقريباً <b>' + fmtNum(accrued) + '</b> يوم من أصل ' + entitlement + '.';
+
+    accruedValue.textContent = fmtNum(accrued) + ' / ' + entitlement;
+    accruedTrack.style.width = (data.yearFraction * 100) + '%';
+
+    var raw = parseFloat(takenInput.value);
+    var taken = isNaN(raw) || raw < 0 ? 0 : raw;
+    var net = accrued - taken;
+    if (net < 0) net = 0;
+    netValue.textContent = fmtNum(net);
+
+    var remaining = data.workDays - net;
+    if (remaining < 0) remaining = 0;
+    finalResult.textContent = fmtNum(remaining);
+    breakdownLabel.textContent = data.workDays + ' يوم عمل − ' + fmtNum(net) + ' رصيد متبقي لك';
+  }
+
+  btn21.addEventListener('click', function(){
+    entitlement = 21;
+    btn21.setAttribute('aria-pressed', 'true');
+    btn14.setAttribute('aria-pressed', 'false');
+    update();
+  });
+  btn14.addEventListener('click', function(){
+    entitlement = 14;
+    btn14.setAttribute('aria-pressed', 'true');
+    btn21.setAttribute('aria-pressed', 'false');
+    update();
+  });
+
+  takenInput.addEventListener('input', update);
+  minusBtn.addEventListener('click', function(){
+    var v = parseFloat(takenInput.value) || 0;
+    v = Math.max(0, v - 0.5);
+    takenInput.value = fmtNum(v);
+    update();
+  });
+  plusBtn.addEventListener('click', function(){
+    var v = parseFloat(takenInput.value) || 0;
+    v = v + 0.5;
+    takenInput.value = fmtNum(v);
+    update();
+  });
+
+  update();
+})();
+</script>
+
+</body></html>
