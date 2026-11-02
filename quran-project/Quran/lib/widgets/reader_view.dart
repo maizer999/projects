@@ -124,7 +124,7 @@ class _ReaderViewState extends State<ReaderView> {
 
   Widget _quranFrame({required Widget child}) {
     final dark = widget.state.darkMode;
-    final page = dark ? const Color(0xFF14183A) : const Color(0xFFFBF7EC);
+    final page = dark ? const Color(0xFF1A3B2C) : const Color(0xFFFBF3DC);
     const gold = AppColors.gold;
     return Container(
       padding: const EdgeInsets.all(6),

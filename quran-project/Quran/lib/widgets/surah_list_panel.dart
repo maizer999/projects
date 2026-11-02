@@ -158,13 +158,13 @@ class _SurahListPanelState extends State<SurahListPanel> {
       margin: const EdgeInsets.only(bottom: 6),
       decoration: BoxDecoration(
         color: dark ? AppColors.panelDark : AppColors.panelLight,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: dark ? AppColors.borderDark : AppColors.borderLight,
         ),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(14),
         child: Material(
           color: Colors.transparent,
           child: Theme(
@@ -246,50 +246,59 @@ class _SurahListPanelState extends State<SurahListPanel> {
         ? AppColors.accent
         : (dark ? AppColors.borderDark : AppColors.borderLight);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: border),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      child: Row(
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: dark ? AppColors.bgDark : AppColors.bgLight,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              '${surah.number}',
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-            ),
+    return Material(
+      color: bg,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () => widget.onOpen(surah.number),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: border),
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              surah.name,
-              textDirection: TextDirection.rtl,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: AppColors.gold,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: dark ? AppColors.bgDark : AppColors.bgLight,
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  '${surah.number}',
+                  style:
+                      const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                ),
               ),
-              overflow: TextOverflow.ellipsis,
-            ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  surah.name,
+                  textDirection: TextDirection.rtl,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.gold,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (mistakeCount > 0) ...[
+                _mistakeBadge(mistakeCount),
+                const SizedBox(width: 6),
+              ],
+              Icon(
+                Icons.menu_book_outlined,
+                size: 20,
+                color: dark ? AppColors.mutedDark : AppColors.mutedLight,
+              ),
+            ],
           ),
-          if (mistakeCount > 0) _mistakeBadge(mistakeCount),
-          const SizedBox(width: 4),
-          IconButton(
-            tooltip: 'فتح السورة',
-            icon: const Icon(Icons.menu_book_outlined, size: 20),
-            onPressed: () => widget.onOpen(surah.number),
-            visualDensity: VisualDensity.compact,
-          ),
-        ],
+        ),
       ),
     );
   }
