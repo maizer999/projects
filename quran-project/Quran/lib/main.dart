@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'services/prefs.dart';
 import 'state/app_state.dart';
 import 'screens/home_screen.dart';
@@ -6,6 +7,16 @@ import 'theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  AudioPlayer.global.setAudioContext(AudioContext(
+    android: AudioContextAndroid(
+      contentType: AndroidContentType.music,
+      usageType: AndroidUsageType.media,
+      audioFocus: AndroidAudioFocus.gain,
+    ),
+    iOS: AudioContextIOS(
+      category: AVAudioSessionCategory.playback,
+    ),
+  ));
   final prefs = await Prefs.create();
   final state = AppState(prefs);
   state.loadSurahs();

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../state/app_state.dart';
 import 'quran_api.dart';
@@ -60,7 +61,8 @@ class PlayerController {
       await _player.stop();
       await _player.play(UrlSource(url));
       await _player.setPlaybackRate(speed);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('PlayerController.play error: $e');
       state.setPlaybackState(ayahIdx: idx, playing: false);
     }
   }

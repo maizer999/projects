@@ -43,7 +43,7 @@ class _PlayerBarState extends State<PlayerBar> {
     return Container(
       padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
       decoration: BoxDecoration(
-        color: s.darkMode ? AppColors.bg2Dark : AppColors.panelLight,
+        color: s.darkMode ? AppColors.bg2Dark : AppColors.bg2Light,
         border: Border(
           top: BorderSide(
             color: s.darkMode ? AppColors.borderDark : AppColors.borderLight,
