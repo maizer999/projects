@@ -264,8 +264,8 @@ class _ReaderViewState extends State<ReaderView> {
   /// a separate long-press recognizer on the same span.
   GestureRecognizer _ayahRecognizer(int surahNumber, int ayahNumber, int idx) {
     return TapGestureRecognizer()
-      ..onTapDown = (_) => _tapDownAt[idx] = DateTime.now()
-      ..onTapCancel = () => _tapDownAt.remove(idx)
+      ..onTapDown = (_) { _tapDownAt[idx] = DateTime.now(); }
+      ..onTapCancel = () { _tapDownAt.remove(idx); }
       ..onTapUp = (_) {
         final down = _tapDownAt.remove(idx);
         final isLongPress = down != null &&
