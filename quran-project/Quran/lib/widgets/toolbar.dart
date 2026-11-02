@@ -27,7 +27,7 @@ class AppToolbar extends StatelessWidget {
               onPressed: onOpenDrawer,
             ),
           if (s.arabic == null)
-            const Expanded(
+            Expanded(
               child: Text(
                 'اختر من القائمة',
                 style: TextStyle(fontSize: 11, color: AppColors.mutedDark),
@@ -191,8 +191,8 @@ class _SettingsSheet extends StatelessWidget {
     );
   }
 
-  static const _lbl =
-      TextStyle(fontSize: 12, color: AppColors.mutedDark);
+  static TextStyle get _lbl =>
+      const TextStyle(fontSize: 12).copyWith(color: AppColors.mutedDark);
 }
 
 class _ColorPicker extends StatelessWidget {

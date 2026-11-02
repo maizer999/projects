@@ -1,37 +1,88 @@
 import 'package:flutter/material.dart';
 
-/// A named accent pair the user can pick in Settings. Backgrounds, text and
-/// gold stay fixed (they're what makes the app feel like a mushaf); only
-/// the interactive accent (buttons, play control, selection highlight,
-/// logo) changes between presets.
+/// A full palette the user can pick in Settings. Dark mode (the app's
+/// chrome — toolbar, surah list, settings) is recolored entirely to the
+/// chosen hue. Light mode and the reading page itself stay warm
+/// cream/parchment on purpose (that's the "paper" the mushaf is printed
+/// on, not a brand color), and gold stays gold everywhere.
 class ThemePreset {
   final String id;
   final String label;
   final Color accent;
   final Color accent2;
-  const ThemePreset(this.id, this.label, this.accent, this.accent2);
+  final Color bgDark;
+  final Color bg2Dark;
+  final Color textDark;
+  final Color mutedDark;
+  const ThemePreset(
+    this.id,
+    this.label, {
+    required this.accent,
+    required this.accent2,
+    required this.bgDark,
+    required this.bg2Dark,
+    required this.textDark,
+    required this.mutedDark,
+  });
 }
 
 const List<ThemePreset> themePresets = [
-  ThemePreset('green', 'أخضر', Color(0xFF1F6B45), Color(0xFF3F9B6A)),
-  ThemePreset('blue', 'أزرق', Color(0xFF1E5A8B), Color(0xFF3FA0D1)),
-  ThemePreset('purple', 'بنفسجي', Color(0xFF8B5CF6), Color(0xFF22D3EE)),
-  ThemePreset('maroon', 'عنّابي', Color(0xFF7A1F3D), Color(0xFFC9436B)),
+  ThemePreset(
+    'green',
+    'أخضر',
+    accent: Color(0xFF1F6B45),
+    accent2: Color(0xFF3F9B6A),
+    bgDark: Color(0xFF0E2A1E),
+    bg2Dark: Color(0xFF15372A),
+    textDark: Color(0xFFEFF5F0),
+    mutedDark: Color(0xFFA9C2B2),
+  ),
+  ThemePreset(
+    'blue',
+    'أزرق',
+    accent: Color(0xFF1F426B),
+    accent2: Color(0xFF3F6A9B),
+    bgDark: Color(0xFF0E1B2A),
+    bg2Dark: Color(0xFF152537),
+    textDark: Color(0xFFEFF2F5),
+    mutedDark: Color(0xFFA9B5C2),
+  ),
+  ThemePreset(
+    'purple',
+    'بنفسجي',
+    accent: Color(0xFF421F6B),
+    accent2: Color(0xFF6A3F9B),
+    bgDark: Color(0xFF1B0E2A),
+    bg2Dark: Color(0xFF251537),
+    textDark: Color(0xFFF2EFF5),
+    mutedDark: Color(0xFFB5A9C2),
+  ),
+  ThemePreset(
+    'maroon',
+    'عنّابي',
+    accent: Color(0xFF6B1F31),
+    accent2: Color(0xFF9B3F54),
+    bgDark: Color(0xFF2A0E15),
+    bg2Dark: Color(0xFF37151D),
+    textDark: Color(0xFFF5EFF0),
+    mutedDark: Color(0xFFC2A9AF),
+  ),
 ];
 
 ThemePreset presetById(String id) =>
     themePresets.firstWhere((p) => p.id == id, orElse: () => themePresets[0]);
 
 class AppColors {
-  // Dark mode — deep forest green, like a lantern-lit mosque at night.
-  static const bgDark = Color(0xFF0E2A1E);
-  static const bg2Dark = Color(0xFF15372A);
+  // Dark mode — set per the user's chosen preset (see [applyPreset]);
+  // these defaults are the "أخضر" preset.
+  static Color bgDark = themePresets[0].bgDark;
+  static Color bg2Dark = themePresets[0].bg2Dark;
   static const panelDark = Color(0x1AFFFFFF); // rgba(255,255,255,0.10)
   static const borderDark = Color(0x1FFFFFFF);
-  static const textDark = Color(0xFFEFF5F0);
-  static const mutedDark = Color(0xFFA9C2B2);
+  static Color textDark = themePresets[0].textDark;
+  static Color mutedDark = themePresets[0].mutedDark;
 
-  // Light mode — warm parchment/cream, like an open mushaf page.
+  // Light mode — always warm parchment/cream, like an open mushaf page.
   static const bgLight = Color(0xFFF8F2E2);
   static const bg2Light = Color(0xFFF0E7CF);
   static const panelLight = Color(0xFFFFFCF4);
@@ -50,6 +101,10 @@ class AppColors {
   static void applyPreset(ThemePreset preset) {
     accent = preset.accent;
     accent2 = preset.accent2;
+    bgDark = preset.bgDark;
+    bg2Dark = preset.bg2Dark;
+    textDark = preset.textDark;
+    mutedDark = preset.mutedDark;
   }
 }
 

@@ -205,12 +205,12 @@ class _SurahListPanelState extends State<SurahListPanel> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textDirection: TextDirection.rtl,
-                  style: const TextStyle(fontSize: 11, color: AppColors.mutedDark),
+                  style: TextStyle(fontSize: 11, color: AppColors.mutedDark),
                 ),
           children: [
             if (surahsInJuz.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(12),
+              Padding(
+                padding: const EdgeInsets.all(12),
                 child: Text('...', style: TextStyle(color: AppColors.mutedDark)),
               )
             else

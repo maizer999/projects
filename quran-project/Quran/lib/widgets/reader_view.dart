@@ -114,7 +114,7 @@ class _ReaderViewState extends State<ReaderView> {
         color: AppColors.accent.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
       ),
-      child: const Text(
+      child: Text(
         'اضغط على الآية لتسمعها من هناك — اضغط مطوّلًا عليها لتعليمها كخطأ',
         style: TextStyle(fontSize: 12, color: AppColors.mutedDark),
         textAlign: TextAlign.center,
@@ -429,7 +429,7 @@ class _Welcome extends StatelessWidget {
             const SizedBox(height: 16),
             const Text('مرحبًا بك في تطبيق القرآن الكريم'),
             const SizedBox(height: 6),
-            const Text(
+            Text(
               'اختر سورة من القائمة للبدء',
               style: TextStyle(fontSize: 12, color: AppColors.mutedDark),
             ),

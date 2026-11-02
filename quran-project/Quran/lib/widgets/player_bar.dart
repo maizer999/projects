@@ -57,7 +57,7 @@ class _PlayerBarState extends State<PlayerBar> {
             children: [
               Text(
                 _fmt(widget.player.position),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   color: AppColors.mutedDark,
                 ),
@@ -85,7 +85,7 @@ class _PlayerBarState extends State<PlayerBar> {
               ),
               Text(
                 _fmt(widget.player.duration),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   color: AppColors.mutedDark,
                 ),
@@ -138,7 +138,7 @@ class _PlayerBarState extends State<PlayerBar> {
                           ? 'آية ${arabic.ayahs[s.currentAyahIdx].numberInSurah} · ${s.currentReciter.name}'
                           : s.currentReciter.name,
                       textDirection: TextDirection.rtl,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
                         color: AppColors.mutedDark,
                       ),
