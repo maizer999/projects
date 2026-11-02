@@ -30,6 +30,21 @@ class PlayerController {
   Duration duration = Duration.zero;
   Duration position = Duration.zero;
   bool _isPlaying = false;
+  double speed = 1.0;
+
+  static const List<double> speedSteps = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+
+  Future<void> setSpeed(double rate) async {
+    speed = rate;
+    await _player.setPlaybackRate(rate);
+    _emit();
+  }
+
+  Future<void> cycleSpeed() async {
+    final i = speedSteps.indexOf(speed);
+    final next = speedSteps[(i + 1) % speedSteps.length];
+    await setSpeed(next);
+  }
 
   final _changes = StreamController<void>.broadcast();
   Stream<void> get changes => _changes.stream;
@@ -44,6 +59,7 @@ class PlayerController {
     try {
       await _player.stop();
       await _player.play(UrlSource(url));
+      await _player.setPlaybackRate(speed);
     } catch (_) {
       state.setPlaybackState(ayahIdx: idx, playing: false);
     }

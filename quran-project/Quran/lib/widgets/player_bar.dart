@@ -145,6 +145,22 @@ class _PlayerBarState extends State<PlayerBar> {
                   ],
                 ),
               ),
+              TextButton(
+                onPressed: widget.player.cycleSpeed,
+                style: TextButton.styleFrom(
+                  minimumSize: const Size(44, 32),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                ),
+                child: Text(
+                  '${widget.player.speed}x'
+                      .replaceAll('.0x', 'x'),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.accent,
+                  ),
+                ),
+              ),
               IconButton(
                 icon: const Icon(Icons.stop),
                 onPressed: widget.player.stop,
