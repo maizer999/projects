@@ -390,10 +390,29 @@ class _ReaderViewState extends State<ReaderView> {
     }).join();
   }
 
+  // Some editions embed the Bismillah inside ayah 1's own text (in addition
+  // to us drawing it separately above the surah), which showed up as it
+  // being printed twice. Diacritics differ slightly between editions, so
+  // instead of matching an exact string we strip tashkeel to check whether
+  // the ayah *starts* with "بسم الله الرحمن الرحيم", then cut that many
+  // whitespace-separated words off the original (still-diacritised) text.
   String _stripBismillah(String s) {
-    final r1 = RegExp(r'^بِسْمِ\s*ٱللَّهِ\s*ٱلرَّحْمَـٰنِ\s*ٱلرَّحِيمِ\s*');
-    final r2 = RegExp(r'^بِسْمِ\s*اللَّهِ\s*الرَّحْمَنِ\s*الرَّحِيمِ\s*');
-    return s.replaceFirst(r1, '').replaceFirst(r2, '');
+    final noTashkeel =
+        s.replaceAll(RegExp(r'[ً-ٰٟۖ-ۭ]'), '');
+    final normalized = noTashkeel.replaceAll('ٱ', 'ا');
+    const bismillah = 'بسم الله الرحمن الرحيم';
+    if (!normalized.startsWith(bismillah)) return s;
+    final wordCount = bismillah.split(' ').length;
+    var i = 0;
+    for (var w = 0; w < wordCount && i < s.length; w++) {
+      while (i < s.length && s[i] != ' ') {
+        i++;
+      }
+      while (i < s.length && s[i] == ' ') {
+        i++;
+      }
+    }
+    return s.substring(i);
   }
 }
 

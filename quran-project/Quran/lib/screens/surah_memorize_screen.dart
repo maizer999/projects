@@ -261,9 +261,26 @@ class _SurahMemorizeScreenState extends State<SurahMemorizeScreen> {
     }).join();
   }
 
+  // See the matching comment in reader_view.dart: some editions embed the
+  // Bismillah inside ayah 1's own text, which showed up as it being
+  // printed twice. We strip tashkeel to detect it reliably, then cut that
+  // many words off the original (still-diacritised) text.
   String _stripBismillah(String s) {
-    final r1 = RegExp(r'^بِسْمِ\s*ٱللَّهِ\s*ٱلرَّحْمَـٰنِ\s*ٱلرَّحِيمِ\s*');
-    final r2 = RegExp(r'^بِسْمِ\s*اللَّهِ\s*الرَّحْمَنِ\s*الرَّحِيمِ\s*');
-    return s.replaceFirst(r1, '').replaceFirst(r2, '');
+    final noTashkeel =
+        s.replaceAll(RegExp(r'[ً-ٰٟۖ-ۭ]'), '');
+    final normalized = noTashkeel.replaceAll('ٱ', 'ا');
+    const bismillah = 'بسم الله الرحمن الرحيم';
+    if (!normalized.startsWith(bismillah)) return s;
+    final wordCount = bismillah.split(' ').length;
+    var i = 0;
+    for (var w = 0; w < wordCount && i < s.length; w++) {
+      while (i < s.length && s[i] != ' ') {
+        i++;
+      }
+      while (i < s.length && s[i] == ' ') {
+        i++;
+      }
+    }
+    return s.substring(i);
   }
 }
