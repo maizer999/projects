@@ -6,6 +6,7 @@ import '../widgets/reader_view.dart';
 import '../widgets/player_bar.dart';
 import '../widgets/toolbar.dart';
 import '../theme.dart';
+import 'memorization_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.state});
@@ -39,9 +40,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final listPanel = SurahListPanel(
       state: s,
-      onPick: (surahNumber) {
+      onListen: (surahNumber) {
         s.loadSurah(surahNumber);
         if (!wide) Navigator.of(context).maybePop();
+      },
+      onMemorize: (surahNumber) {
+        // TODO(phase 5): scope this to the tapped surah with a per-ayah
+        // mistake log feeding the counter, instead of the full page-based
+        // memorization screen.
+        s.loadSurah(surahNumber);
+        if (!wide) Navigator.of(context).maybePop();
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => MemorizationScreen(state: s)),
+        );
       },
     );
 
