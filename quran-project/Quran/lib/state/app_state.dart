@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import '../models/juz.dart';
 import '../models/surah.dart';
 import '../services/prefs.dart';
 import '../services/quran_api.dart';
@@ -140,6 +141,7 @@ class AppState extends ChangeNotifier {
   late List<AyahRef> mistakes =
       _prefs.getJsonList('mistakes', AyahRef.fromJson);
   late List<int> savedSurahs = _prefs.getIntList('savedSurahs');
+  late Map<int, int> surahMistakeCounts = _loadSurahMistakeCounts();
   late Map<int, PageMemo> pageMemos = _loadPageMemos();
   final Map<int, Future<QuranPage>> _pageCache = {};
   late String pageImageUrlTemplate = _prefs.getString(
@@ -402,6 +404,43 @@ class AppState extends ChangeNotifier {
       mistakes.map((m) => m.toJson()).toList(),
     );
     notifyListeners();
+  }
+
+  // Per-surah mistake counter (for the Memorize flow).
+  // Unlike `mistakes` above (a toggle on/off per ayah), this is a running
+  // count per surah that only grows until the user resets it, so they can
+  // see at a glance how many mistakes they've logged for a surah overall.
+  Map<int, int> _loadSurahMistakeCounts() {
+    final raw = _prefs.getIntMap('surahMistakeCounts');
+    return raw.map((k, v) => MapEntry(int.parse(k), v));
+  }
+
+  Future<void> _saveSurahMistakeCounts() => _prefs.setIntMap(
+        'surahMistakeCounts',
+        surahMistakeCounts.map((k, v) => MapEntry(k.toString(), v)),
+      );
+
+  int mistakeCountForSurah(int surahNumber) =>
+      surahMistakeCounts[surahNumber] ?? 0;
+
+  Future<void> incrementSurahMistake(int surahNumber) async {
+    surahMistakeCounts[surahNumber] =
+        (surahMistakeCounts[surahNumber] ?? 0) + 1;
+    await _saveSurahMistakeCounts();
+    notifyListeners();
+  }
+
+  Future<void> resetSurahMistakeCount(int surahNumber) async {
+    if (!surahMistakeCounts.containsKey(surahNumber)) return;
+    surahMistakeCounts.remove(surahNumber);
+    await _saveSurahMistakeCounts();
+    notifyListeners();
+  }
+
+  // Juz <-> Surah
+  List<Surah> surahsInJuz(int juzNumber) {
+    final juz = quranJuzs.firstWhere((j) => j.number == juzNumber);
+    return surahs.where((s) => juz.containsSurah(s.number)).toList();
   }
 
   // Saved surahs

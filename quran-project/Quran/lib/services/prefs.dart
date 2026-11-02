@@ -36,4 +36,17 @@ class Prefs {
 
   Future<void> setIntList(String k, List<int> v) =>
       _p.setString(k, json.encode(v));
+
+  /// A map keyed by a stringified int (e.g. surah number) to an int value
+  /// (e.g. a mistake count). JSON object keys must be strings, so callers
+  /// use `int.parse`/`.toString()` at the edges.
+  Map<String, int> getIntMap(String k) {
+    final raw = _p.getString(k);
+    if (raw == null) return <String, int>{};
+    final decoded = json.decode(raw) as Map<String, dynamic>;
+    return decoded.map((key, value) => MapEntry(key, value as int));
+  }
+
+  Future<void> setIntMap(String k, Map<String, int> v) =>
+      _p.setString(k, json.encode(v));
 }
