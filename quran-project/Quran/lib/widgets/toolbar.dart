@@ -27,24 +27,15 @@ class AppToolbar extends StatelessWidget {
               icon: const Icon(Icons.menu),
               onPressed: onOpenDrawer,
             ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  s.arabic == null
-                      ? 'اختر من القائمة'
-                      : 'سورة ${s.arabic!.number} · ${s.arabic!.numberOfAyahs} آية',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: AppColors.mutedDark,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
+          if (s.arabic == null)
+            const Expanded(
+              child: Text(
+                'اختر من القائمة',
+                style: TextStyle(fontSize: 11, color: AppColors.mutedDark),
+              ),
+            )
+          else
+            const Expanded(child: SizedBox.shrink()),
           if (s.arabic != null)
             Padding(
               padding: const EdgeInsets.only(left: 8),
