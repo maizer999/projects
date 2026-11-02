@@ -200,9 +200,10 @@ class _SurahListPanelState extends State<SurahListPanel> {
           subtitle: surahsInJuz.isEmpty
               ? null
               : Text(
-                  surahsInJuz.map((s) => s.englishName).join(' · '),
+                  surahsInJuz.map((s) => s.name).join(' · '),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                  textDirection: TextDirection.rtl,
                   style: const TextStyle(fontSize: 11, color: AppColors.mutedDark),
                 ),
           children: [
@@ -280,7 +281,7 @@ class _SurahListPanelState extends State<SurahListPanel> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  surah.englishName,
+                  '${surah.numberOfAyahs} آية',
                   style: const TextStyle(fontSize: 10, color: AppColors.mutedDark),
                   overflow: TextOverflow.ellipsis,
                 ),

@@ -132,26 +132,15 @@ class _ReaderViewState extends State<ReaderView> {
             style: _arStyle(fontSize: 36, color: AppColors.gold, bold: true),
           ),
           const SizedBox(height: 4),
-          Text(
-            s.englishName,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-          ),
-          Text(
-            s.englishNameTranslation,
-            style: const TextStyle(
-              fontSize: 13,
-              color: AppColors.mutedDark,
-            ),
-          ),
           const SizedBox(height: 10),
           Wrap(
             spacing: 6,
             runSpacing: 6,
             alignment: WrapAlignment.center,
             children: [
-              _stat('Surah ${s.number}'),
-              _stat('${s.numberOfAyahs} verses'),
-              _stat(s.revelationType),
+              _stat('سورة ${s.number}'),
+              _stat('${s.numberOfAyahs} آية'),
+              _stat(_arabicRevelation(s.revelationType)),
               if (mistakesInSurah > 0)
                 _stat('$mistakesInSurah خطأ', color: AppColors.danger),
             ],
@@ -173,6 +162,9 @@ class _ReaderViewState extends State<ReaderView> {
       ),
     );
   }
+
+  String _arabicRevelation(String type) =>
+      type.toLowerCase() == 'meccan' ? 'مكية' : 'مدنية';
 
   Widget _stat(String text, {Color? color}) {
     return Container(

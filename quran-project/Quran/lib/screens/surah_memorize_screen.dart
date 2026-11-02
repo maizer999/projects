@@ -61,7 +61,10 @@ class _SurahMemorizeScreenState extends State<SurahMemorizeScreen> {
       builder: (context, _) => Scaffold(
         backgroundColor: dark ? AppColors.bgDark : AppColors.bgLight,
         appBar: AppBar(
-          title: Text(_detail?.englishName ?? 'الحفظ'),
+          title: Text(
+            _detail?.name ?? 'الحفظ',
+            textDirection: TextDirection.rtl,
+          ),
           actions: [
             Builder(builder: (context) {
               final count = s.mistakeCountForSurah(widget.surahNumber);

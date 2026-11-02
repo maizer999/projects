@@ -125,7 +125,8 @@ class _PlayerBarState extends State<PlayerBar> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      '${arabic.englishName} · ${arabic.name}',
+                      arabic.name,
+                      textDirection: TextDirection.rtl,
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -134,7 +135,7 @@ class _PlayerBarState extends State<PlayerBar> {
                     ),
                     Text(
                       s.currentAyahIdx >= 0
-                          ? 'Ayah ${arabic.ayahs[s.currentAyahIdx].numberInSurah} · ${s.currentReciter.name}'
+                          ? 'آية ${arabic.ayahs[s.currentAyahIdx].numberInSurah} · ${s.currentReciter.name}'
                           : s.currentReciter.name,
                       style: const TextStyle(
                         fontSize: 11,

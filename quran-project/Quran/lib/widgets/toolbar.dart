@@ -33,17 +33,9 @@ class AppToolbar extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  s.arabic?.englishName ?? 'Select a Surah',
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
                   s.arabic == null
-                      ? 'Choose from the list'
-                      : 'Surah ${s.arabic!.number} · ${s.arabic!.numberOfAyahs} verses · ${s.arabic!.revelationType}',
+                      ? 'اختر من القائمة'
+                      : 'سورة ${s.arabic!.number} · ${s.arabic!.numberOfAyahs} آية',
                   style: const TextStyle(
                     fontSize: 11,
                     color: AppColors.mutedDark,
