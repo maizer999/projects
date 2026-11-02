@@ -92,7 +92,7 @@ class _ReaderViewState extends State<ReaderView> {
         children: [
           _hint(),
           const SizedBox(height: 10),
-          _quranFrame(
+          _page(
             child: Column(
               children: [
                 if (showBismillah) _bismillah(),
@@ -119,6 +119,25 @@ class _ReaderViewState extends State<ReaderView> {
         style: TextStyle(fontSize: 12, color: AppColors.mutedDark),
         textAlign: TextAlign.center,
       ),
+    );
+  }
+
+  /// The reading page itself: the ornate gold-framed "mushaf" look when
+  /// enabled in Settings, or a plain minimal card when the user prefers a
+  /// cleaner, distraction-free page.
+  Widget _page({required Widget child}) {
+    if (widget.state.ornateFrame) return _quranFrame(child: child);
+    final dark = widget.state.darkMode;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
+      decoration: BoxDecoration(
+        color: dark ? AppColors.bg2Dark : AppColors.panelLight,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: dark ? AppColors.borderDark : AppColors.borderLight,
+        ),
+      ),
+      child: child,
     );
   }
 

@@ -337,7 +337,7 @@ class _Logo extends StatelessWidget {
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           colors: [AppColors.accent, AppColors.accent2],
         ),
         borderRadius: BorderRadius.circular(10),

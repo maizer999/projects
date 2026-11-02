@@ -139,12 +139,12 @@ class _SettingsSheet extends StatelessWidget {
           children: [
             const Center(
               child: Text(
-                'Reader settings',
+                'إعدادات القراءة',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
             ),
             const SizedBox(height: 16),
-            const Text('Reciter', style: _lbl),
+            const Text('القارئ', style: _lbl),
             DropdownButtonFormField<String>(
               initialValue: state.reciterId,
               items: AppState.reciters
@@ -158,12 +158,30 @@ class _SettingsSheet extends StatelessWidget {
             const SizedBox(height: 16),
             Row(
               children: [
-                const Expanded(child: Text('Arabic size', style: _lbl)),
+                const Expanded(child: Text('حجم الخط', style: _lbl)),
                 Text(state.arSize.round().toString()),
               ],
             ),
             const SizedBox(height: 8),
             _SizeStepper(state: state),
+            const SizedBox(height: 20),
+            const Text('لون التطبيق', style: _lbl),
+            const SizedBox(height: 8),
+            _ColorPicker(state: state),
+            const SizedBox(height: 16),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: state.ornateFrame,
+              onChanged: state.setOrnateFrame,
+              title: const Text(
+                'إطار المصحف المزخرف',
+                style: TextStyle(fontSize: 14),
+              ),
+              subtitle: const Text(
+                'إطار ذهبي مزخرف حول صفحة القراءة، أو تصميم بسيط ونظيف',
+                style: _lbl,
+              ),
+            ),
           ],
         ),
       ),
@@ -172,6 +190,56 @@ class _SettingsSheet extends StatelessWidget {
 
   static const _lbl =
       TextStyle(fontSize: 12, color: AppColors.mutedDark);
+}
+
+class _ColorPicker extends StatelessWidget {
+  const _ColorPicker({required this.state});
+  final AppState state;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        for (final preset in themePresets) ...[
+          _swatch(preset),
+          const SizedBox(width: 12),
+        ],
+      ],
+    );
+  }
+
+  Widget _swatch(ThemePreset preset) {
+    final selected = state.accentPresetId == preset.id;
+    return GestureDetector(
+      onTap: () => state.setAccentPreset(preset.id),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [preset.accent, preset.accent2],
+              ),
+              border: Border.all(
+                color: selected
+                    ? (state.darkMode ? Colors.white : Colors.black)
+                    : Colors.transparent,
+                width: 2,
+              ),
+            ),
+            child: selected
+                ? const Icon(Icons.check, size: 18, color: Colors.white)
+                : null,
+          ),
+          const SizedBox(height: 4),
+          Text(preset.label, style: const TextStyle(fontSize: 10)),
+        ],
+      ),
+    );
+  }
 }
 
 class _SizeStepper extends StatelessWidget {

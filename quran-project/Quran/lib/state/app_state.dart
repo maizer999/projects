@@ -5,6 +5,7 @@ import '../models/juz.dart';
 import '../models/surah.dart';
 import '../services/prefs.dart';
 import '../services/quran_api.dart';
+import '../theme.dart';
 
 class Reciter {
   final String id;
@@ -13,7 +14,11 @@ class Reciter {
 }
 
 class AppState extends ChangeNotifier {
-  AppState(this._prefs);
+  AppState(this._prefs) {
+    // Apply the saved accent preset immediately so the very first frame
+    // (built from AppColors.accent/accent2) already matches it.
+    AppColors.applyPreset(presetById(accentPresetId));
+  }
 
   final Prefs _prefs;
   final QuranApi api = QuranApi();
@@ -46,6 +51,8 @@ class AppState extends ChangeNotifier {
   late double arSize = _prefs.getInt('arSize', 22).toDouble();
   late bool darkMode = _prefs.getBool('dark', true);
   late int lastSurah = _prefs.getInt('lastSurah', 0);
+  late String accentPresetId = _prefs.getString('accentPreset', 'green');
+  late bool ornateFrame = _prefs.getBool('ornateFrame', true);
 
   // Collections
   late Map<int, Set<int>> surahMistakeAyahs = _loadSurahMistakeAyahs();
@@ -124,6 +131,19 @@ class AppState extends ChangeNotifier {
   Future<void> toggleTheme() async {
     darkMode = !darkMode;
     await _prefs.setBool('dark', darkMode);
+    notifyListeners();
+  }
+
+  Future<void> setAccentPreset(String id) async {
+    accentPresetId = id;
+    AppColors.applyPreset(presetById(id));
+    await _prefs.setString('accentPreset', id);
+    notifyListeners();
+  }
+
+  Future<void> setOrnateFrame(bool value) async {
+    ornateFrame = value;
+    await _prefs.setBool('ornateFrame', value);
     notifyListeners();
   }
 
