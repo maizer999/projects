@@ -148,8 +148,11 @@ class _SettingsSheet extends StatelessWidget {
             DropdownButtonFormField<String>(
               initialValue: state.reciterId,
               items: AppState.reciters
-                  .map((r) =>
-                      DropdownMenuItem(value: r.id, child: Text(r.name)))
+                  .map((r) => DropdownMenuItem(
+                        value: r.id,
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: Text(r.name, textDirection: TextDirection.rtl),
+                      ))
                   .toList(),
               onChanged: (v) {
                 if (v != null) state.setReciter(v);

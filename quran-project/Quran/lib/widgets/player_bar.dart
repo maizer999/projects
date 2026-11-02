@@ -137,6 +137,7 @@ class _PlayerBarState extends State<PlayerBar> {
                       s.currentAyahIdx >= 0
                           ? 'آية ${arabic.ayahs[s.currentAyahIdx].numberInSurah} · ${s.currentReciter.name}'
                           : s.currentReciter.name,
+                      textDirection: TextDirection.rtl,
                       style: const TextStyle(
                         fontSize: 11,
                         color: AppColors.mutedDark,
