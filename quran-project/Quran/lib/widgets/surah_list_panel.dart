@@ -164,9 +164,13 @@ class _SurahListPanelState extends State<SurahListPanel> {
           color: dark ? AppColors.borderDark : AppColors.borderLight,
         ),
       ),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: Material(
+          color: Colors.transparent,
+          child: Theme(
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+            child: ExpansionTile(
           key: PageStorageKey('juz_${juz.number}'),
           initiallyExpanded: expanded,
           onExpansionChanged: (open) {

@@ -135,8 +135,8 @@ class AppState extends ChangeNotifier {
   // "I got this one right now"). The counter shown in the surah list is
   // just the size of that set: how many ayahs still need work.
   Map<int, Set<int>> _loadSurahMistakeAyahs() {
-    final raw = _prefs.getString('surahMistakeAyahs');
-    if (raw == null) return <int, Set<int>>{};
+    final raw = _prefs.getString('surahMistakeAyahs', '');
+    if (raw.isEmpty) return <int, Set<int>>{};
     final decoded = json.decode(raw) as Map<String, dynamic>;
     return decoded.map(
       (k, v) => MapEntry(
