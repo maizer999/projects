@@ -267,25 +267,15 @@ class _SurahListPanelState extends State<SurahListPanel> {
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  surah.name,
-                  textDirection: TextDirection.rtl,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.gold,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  '${surah.numberOfAyahs} آية',
-                  style: const TextStyle(fontSize: 10, color: AppColors.mutedDark),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+            child: Text(
+              surah.name,
+              textDirection: TextDirection.rtl,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: AppColors.gold,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
           if (mistakeCount > 0) _mistakeBadge(mistakeCount),
