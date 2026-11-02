@@ -17,7 +17,9 @@ class ReaderView extends StatefulWidget {
 class _ReaderViewState extends State<ReaderView> {
   final _scrollCtrl = ScrollController();
   final Map<int, GlobalKey> _ayahKeys = {};
+  final Map<int, DateTime> _tapDownAt = {};
   int? _lastScrolledTo;
+  static const _longPressThreshold = Duration(milliseconds: 420);
 
   @override
   void initState() {
@@ -66,7 +68,7 @@ class _ReaderViewState extends State<ReaderView> {
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text(
-            'Failed to load Surah.\n${s.surahError}',
+            'تعذّر تحميل السورة.\n${s.surahError}',
             textAlign: TextAlign.center,
             style: const TextStyle(color: AppColors.danger),
           ),
@@ -88,8 +90,8 @@ class _ReaderViewState extends State<ReaderView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _surahHeader(arabic),
-          const SizedBox(height: 16),
+          _hint(),
+          const SizedBox(height: 10),
           _quranFrame(
             child: Column(
               children: [
@@ -104,113 +106,19 @@ class _ReaderViewState extends State<ReaderView> {
     );
   }
 
-  Widget _surahHeader(SurahDetail s) {
-    final mistakesInSurah = widget.state.mistakeCountForSurah(s.number);
-
+  Widget _hint() {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: widget.state.darkMode
-              ? [const Color(0x332A1F5F), const Color(0x3301557E)]
-              : [const Color(0x206D28D9), const Color(0x200891B2)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: widget.state.darkMode
-              ? AppColors.borderDark
-              : AppColors.borderLight,
-        ),
+        color: AppColors.accent.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
       ),
-      child: Column(
-        children: [
-          Text(
-            s.name,
-            textDirection: TextDirection.rtl,
-            style: _arStyle(fontSize: 36, color: AppColors.gold, bold: true),
-          ),
-          const SizedBox(height: 4),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            alignment: WrapAlignment.center,
-            children: [
-              _stat('سورة ${s.number}'),
-              _stat('${s.numberOfAyahs} آية'),
-              _stat(_arabicRevelation(s.revelationType)),
-              if (mistakesInSurah > 0)
-                _stat('$mistakesInSurah خطأ', color: AppColors.danger),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            alignment: WrapAlignment.center,
-            children: [
-              _actionButton(
-                icon: Icons.play_arrow,
-                label: 'استمع للسورة',
-                onTap: () => widget.player.play(0),
-              ),
-            ],
-          ),
-        ],
+      child: const Text(
+        'اضغط على الآية لتسمعها من هناك — اضغط مطوّلًا عليها لتعليمها كخطأ',
+        style: TextStyle(fontSize: 12, color: AppColors.mutedDark),
+        textAlign: TextAlign.center,
       ),
-    );
-  }
-
-  String _arabicRevelation(String type) =>
-      type.toLowerCase() == 'meccan' ? 'مكية' : 'مدنية';
-
-  Widget _stat(String text, {Color? color}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: color ??
-              (widget.state.darkMode
-                  ? AppColors.borderDark
-                  : AppColors.borderLight),
-        ),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(fontSize: 11, color: color),
-      ),
-    );
-  }
-
-  Widget _actionButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    bool active = false,
-    Color? activeColor,
-  }) {
-    final color = active ? (activeColor ?? AppColors.accent) : null;
-    return OutlinedButton.icon(
-      icon: Icon(icon, size: 16, color: color == null ? null : Colors.white),
-      label: Text(
-        label,
-        textDirection: TextDirection.rtl,
-        style: TextStyle(color: color == null ? null : Colors.white),
-      ),
-      style: OutlinedButton.styleFrom(
-        backgroundColor: color,
-        side: BorderSide(
-          color: color ??
-              (widget.state.darkMode
-                  ? AppColors.borderDark
-                  : AppColors.borderLight),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      ),
-      onPressed: onTap,
     );
   }
 
@@ -317,9 +225,6 @@ class _ReaderViewState extends State<ReaderView> {
         color: isMk ? AppColors.danger : base.color,
       );
 
-      final recognizer = TapGestureRecognizer()
-        ..onTap = () => _onAyahTap(i);
-
       final key = GlobalKey();
       _ayahKeys[i] = key;
 
@@ -331,7 +236,7 @@ class _ReaderViewState extends State<ReaderView> {
       spans.add(TextSpan(
         text: '$text ',
         style: tokStyle,
-        recognizer: recognizer,
+        recognizer: _ayahRecognizer(s.number, a.numberInSurah, i),
       ));
       spans.add(TextSpan(
         text: '﴿${_toArabicDigits(a.numberInSurah)}﴾ ',
@@ -339,7 +244,7 @@ class _ReaderViewState extends State<ReaderView> {
           color: AppColors.gold,
           fontSize: size * 0.75,
         ),
-        recognizer: TapGestureRecognizer()..onTap = () => _onAyahTap(i),
+        recognizer: _ayahRecognizer(s.number, a.numberInSurah, i),
       ));
     }
 
@@ -353,9 +258,25 @@ class _ReaderViewState extends State<ReaderView> {
     );
   }
 
-  /// Tapping an ayah while reading just plays from there — marking
-  /// mistakes happens in the dedicated Memorize screen for this surah.
-  void _onAyahTap(int idx) => widget.player.play(idx);
+  /// A quick tap on an ayah plays it; a long press (press-and-hold) toggles
+  /// it as a mistake. Both live on one TapGestureRecognizer — tap duration
+  /// decides which action fires, so there's no gesture-arena conflict with
+  /// a separate long-press recognizer on the same span.
+  GestureRecognizer _ayahRecognizer(int surahNumber, int ayahNumber, int idx) {
+    return TapGestureRecognizer()
+      ..onTapDown = (_) => _tapDownAt[idx] = DateTime.now()
+      ..onTapCancel = () => _tapDownAt.remove(idx)
+      ..onTapUp = (_) {
+        final down = _tapDownAt.remove(idx);
+        final isLongPress = down != null &&
+            DateTime.now().difference(down) >= _longPressThreshold;
+        if (isLongPress) {
+          widget.state.toggleSurahAyahMistake(surahNumber, ayahNumber);
+        } else {
+          widget.player.play(idx);
+        }
+      };
+  }
 
   TextStyle _arStyle({
     required double fontSize,
@@ -487,10 +408,10 @@ class _Welcome extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            const Text('Welcome to the Al-Quran reader.'),
+            const Text('مرحبًا بك في تطبيق القرآن الكريم'),
             const SizedBox(height: 6),
             const Text(
-              'Pick a Surah from the list to start reading.',
+              'اختر سورة من القائمة للبدء',
               style: TextStyle(fontSize: 12, color: AppColors.mutedDark),
             ),
           ],

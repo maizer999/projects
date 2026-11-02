@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../screens/surah_memorize_screen.dart';
 import '../state/app_state.dart';
 import '../theme.dart';
 
@@ -49,17 +48,17 @@ class AppToolbar extends StatelessWidget {
                 ),
               ),
             ),
-          if (s.arabic != null)
-            IconButton(
-              tooltip: 'وضع الحفظ',
-              icon: const Icon(Icons.menu_book, color: AppColors.gold),
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => SurahMemorizeScreen(
-                    state: s,
-                    surahNumber: s.arabic!.number,
-                  ),
-                ),
+          if (s.arabic != null && s.mistakeCountForSurah(s.arabic!.number) > 0)
+            TextButton.icon(
+              onPressed: () => _confirmReset(
+                context,
+                s.arabic!.number,
+                s.mistakeCountForSurah(s.arabic!.number),
+              ),
+              icon: const Icon(Icons.refresh, size: 18, color: AppColors.danger),
+              label: Text(
+                'تصفير (${s.mistakeCountForSurah(s.arabic!.number)})',
+                style: const TextStyle(color: AppColors.danger),
               ),
             ),
           IconButton(
@@ -75,6 +74,34 @@ class AppToolbar extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _confirmReset(
+    BuildContext context,
+    int surahNumber,
+    int count,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('تصفير الأخطاء؟'),
+        content: Text('رح يتم حذف علامات الأخطاء الـ$count لهاي السورة.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+            child: const Text('تصفير'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await state.resetSurahMistakeCount(surahNumber);
+    }
   }
 
   void _openSettings(BuildContext context) {

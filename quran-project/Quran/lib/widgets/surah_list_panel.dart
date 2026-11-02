@@ -5,19 +5,18 @@ import '../state/app_state.dart';
 import '../theme.dart';
 
 /// The app's primary navigation: 30 Juz, each expanding to the Surahs
-/// inside it. Each Surah row has exactly two actions — Listen and
-/// Memorize — plus that Surah's running mistake counter.
+/// inside it. Each Surah row opens that Surah in the single reading
+/// page, which handles listening and mistake-marking together — plus
+/// that Surah's running mistake counter.
 class SurahListPanel extends StatefulWidget {
   const SurahListPanel({
     super.key,
     required this.state,
-    required this.onListen,
-    required this.onMemorize,
+    required this.onOpen,
   });
 
   final AppState state;
-  final void Function(int surahNumber) onListen;
-  final void Function(int surahNumber) onMemorize;
+  final void Function(int surahNumber) onOpen;
 
   @override
   State<SurahListPanel> createState() => _SurahListPanelState();
@@ -285,15 +284,9 @@ class _SurahListPanelState extends State<SurahListPanel> {
           if (mistakeCount > 0) _mistakeBadge(mistakeCount),
           const SizedBox(width: 4),
           IconButton(
-            tooltip: 'استماع',
-            icon: const Icon(Icons.headphones_outlined, size: 20),
-            onPressed: () => widget.onListen(surah.number),
-            visualDensity: VisualDensity.compact,
-          ),
-          IconButton(
-            tooltip: 'حفظ',
+            tooltip: 'فتح السورة',
             icon: const Icon(Icons.menu_book_outlined, size: 20),
-            onPressed: () => widget.onMemorize(surah.number),
+            onPressed: () => widget.onOpen(surah.number),
             visualDensity: VisualDensity.compact,
           ),
         ],
