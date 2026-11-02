@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Matches the app's default dark-green theme so splash → first frame feels seamless. -->
+    <color name="splash_background">#0E2A1E</color>
+</resources>
