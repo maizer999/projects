@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../models/surah.dart';
 import '../state/app_state.dart';
 import '../theme.dart';
@@ -104,8 +103,8 @@ class QuranPageContent extends StatelessWidget {
           child: Text(
             a.surahName,
             textAlign: TextAlign.center,
-            style: GoogleFonts.getFont(
-              state.currentFont.family,
+            style: TextStyle(
+              fontFamily: 'UthmanicHafs',
               fontSize: fontSize * 0.9,
               color: AppColors.gold,
               fontWeight: FontWeight.w700,
@@ -118,8 +117,8 @@ class QuranPageContent extends StatelessWidget {
             child: Text(
               'بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ',
               textAlign: TextAlign.center,
-              style: GoogleFonts.getFont(
-                state.currentFont.family,
+              style: TextStyle(
+                fontFamily: 'UthmanicHafs',
                 fontSize: fontSize * 0.95,
                 color: AppColors.gold,
               ),
@@ -131,8 +130,8 @@ class QuranPageContent extends StatelessWidget {
 
   Widget _ayahsBlock(List<PageAyah> ayahs) {
     final color = state.darkMode ? AppColors.textDark : AppColors.textLight;
-    final base = GoogleFonts.getFont(
-      state.currentFont.family,
+    final base = TextStyle(
+      fontFamily: 'UthmanicHafs',
       fontSize: fontSize,
       color: color,
       height: 1.9,

@@ -1,7 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../models/surah.dart';
 import '../state/app_state.dart';
 import '../services/player_controller.dart';
@@ -608,9 +607,8 @@ class _ReaderViewState extends State<ReaderView> {
     Color? color,
     bool bold = false,
   }) {
-    final family = widget.state.currentFont.family;
-    return GoogleFonts.getFont(
-      family,
+    return TextStyle(
+      fontFamily: 'UthmanicHafs',
       fontSize: fontSize,
       color: color ?? _textColor(),
       height: 2.0,
@@ -708,7 +706,8 @@ class _Welcome extends StatelessWidget {
               'بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ',
               textDirection: TextDirection.rtl,
               textAlign: TextAlign.center,
-              style: GoogleFonts.amiriQuran(
+              style: const TextStyle(
+                fontFamily: 'UthmanicHafs',
                 fontSize: 44,
                 color: AppColors.gold,
               ),
