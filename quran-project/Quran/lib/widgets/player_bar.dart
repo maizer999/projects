@@ -100,7 +100,7 @@ class _PlayerBarState extends State<PlayerBar> {
                 onPressed: widget.player.previous,
               ),
               Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
                     colors: [AppColors.accent, AppColors.accent2],
@@ -155,7 +155,7 @@ class _PlayerBarState extends State<PlayerBar> {
                 child: Text(
                   '${widget.player.speed}x'
                       .replaceAll('.0x', 'x'),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: AppColors.accent,
