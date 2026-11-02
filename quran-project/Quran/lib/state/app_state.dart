@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import '../models/juz.dart';
 import '../models/surah.dart';
@@ -141,7 +142,7 @@ class AppState extends ChangeNotifier {
   late List<AyahRef> mistakes =
       _prefs.getJsonList('mistakes', AyahRef.fromJson);
   late List<int> savedSurahs = _prefs.getIntList('savedSurahs');
-  late Map<int, int> surahMistakeCounts = _loadSurahMistakeCounts();
+  late Map<int, Set<int>> surahMistakeAyahs = _loadSurahMistakeAyahs();
   late Map<int, PageMemo> pageMemos = _loadPageMemos();
   final Map<int, Future<QuranPage>> _pageCache = {};
   late String pageImageUrlTemplate = _prefs.getString(
@@ -406,34 +407,59 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Per-surah mistake counter (for the Memorize flow).
-  // Unlike `mistakes` above (a toggle on/off per ayah), this is a running
-  // count per surah that only grows until the user resets it, so they can
-  // see at a glance how many mistakes they've logged for a surah overall.
-  Map<int, int> _loadSurahMistakeCounts() {
-    final raw = _prefs.getIntMap('surahMistakeCounts');
-    return raw.map((k, v) => MapEntry(int.parse(k), v));
+  // Per-surah mistake marks (for the Memorize flow).
+  // For each surah, we keep the SET of ayah numbers currently marked as a
+  // mistake (not a blind running total) — so when you come back to a surah,
+  // you see exactly which ayahs you had trouble with, and tapping an
+  // already-marked ayah again un-marks it (fixes an accidental tap, or
+  // "I got this one right now"). The counter shown in the surah list is
+  // just the size of that set: how many ayahs still need work.
+  Map<int, Set<int>> _loadSurahMistakeAyahs() {
+    final raw = _prefs.getString('surahMistakeAyahs');
+    if (raw == null) return <int, Set<int>>{};
+    final decoded = json.decode(raw) as Map<String, dynamic>;
+    return decoded.map(
+      (k, v) => MapEntry(
+        int.parse(k),
+        (v as List).map((e) => e as int).toSet(),
+      ),
+    );
   }
 
-  Future<void> _saveSurahMistakeCounts() => _prefs.setIntMap(
-        'surahMistakeCounts',
-        surahMistakeCounts.map((k, v) => MapEntry(k.toString(), v)),
+  Future<void> _saveSurahMistakeAyahs() => _prefs.setString(
+        'surahMistakeAyahs',
+        json.encode(
+          surahMistakeAyahs.map(
+            (k, v) => MapEntry(k.toString(), v.toList()),
+          ),
+        ),
       );
 
   int mistakeCountForSurah(int surahNumber) =>
-      surahMistakeCounts[surahNumber] ?? 0;
+      surahMistakeAyahs[surahNumber]?.length ?? 0;
 
-  Future<void> incrementSurahMistake(int surahNumber) async {
-    surahMistakeCounts[surahNumber] =
-        (surahMistakeCounts[surahNumber] ?? 0) + 1;
-    await _saveSurahMistakeCounts();
+  bool isSurahAyahMistake(int surahNumber, int ayahNumber) =>
+      surahMistakeAyahs[surahNumber]?.contains(ayahNumber) ?? false;
+
+  /// Marks or unmarks one ayah as a mistake for this surah. Returns the
+  /// new state (true = now marked) so callers can show feedback.
+  Future<bool> toggleSurahAyahMistake(int surahNumber, int ayahNumber) async {
+    final set = surahMistakeAyahs.putIfAbsent(surahNumber, () => <int>{});
+    final nowMarked = !set.contains(ayahNumber);
+    if (nowMarked) {
+      set.add(ayahNumber);
+    } else {
+      set.remove(ayahNumber);
+    }
+    await _saveSurahMistakeAyahs();
     notifyListeners();
+    return nowMarked;
   }
 
   Future<void> resetSurahMistakeCount(int surahNumber) async {
-    if (!surahMistakeCounts.containsKey(surahNumber)) return;
-    surahMistakeCounts.remove(surahNumber);
-    await _saveSurahMistakeCounts();
+    if (!surahMistakeAyahs.containsKey(surahNumber)) return;
+    surahMistakeAyahs.remove(surahNumber);
+    await _saveSurahMistakeAyahs();
     notifyListeners();
   }
 

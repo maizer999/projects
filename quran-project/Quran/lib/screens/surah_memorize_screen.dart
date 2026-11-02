@@ -4,8 +4,10 @@ import '../state/app_state.dart';
 import '../theme.dart';
 
 /// Memorize/review flow for one surah: shows its ayahs and lets the user
-/// tap an ayah they got wrong, which bumps that surah's persistent
-/// mistake counter (shown next to it in the surah list).
+/// tap an ayah they got wrong to mark it. The mark stays (persisted) until
+/// tapped again to clear it, so coming back to the surah later shows
+/// exactly which ayahs still need work — the counter in the surah list is
+/// just how many ayahs are currently marked.
 class SurahMemorizeScreen extends StatefulWidget {
   const SurahMemorizeScreen({
     super.key,
@@ -23,7 +25,6 @@ class SurahMemorizeScreen extends StatefulWidget {
 class _SurahMemorizeScreenState extends State<SurahMemorizeScreen> {
   SurahDetail? _detail;
   String? _error;
-  int? _justTappedAyah;
 
   @override
   void initState() {
@@ -49,45 +50,59 @@ class _SurahMemorizeScreenState extends State<SurahMemorizeScreen> {
     }
   }
 
-  Future<void> _logMistake(int ayahNumber) async {
-    await widget.state.incrementSurahMistake(widget.surahNumber);
-    if (!mounted) return;
-    setState(() => _justTappedAyah = ayahNumber);
-    Future.delayed(const Duration(milliseconds: 400), () {
-      if (mounted && _justTappedAyah == ayahNumber) {
-        setState(() => _justTappedAyah = null);
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final s = widget.state;
     final dark = s.darkMode;
-    return Scaffold(
-      backgroundColor: dark ? AppColors.bgDark : AppColors.bgLight,
-      appBar: AppBar(
-        title: Text(_detail?.englishName ?? 'الحفظ'),
-        actions: [
-          AnimatedBuilder(
-            animation: s,
-            builder: (context, _) {
+    return AnimatedBuilder(
+      animation: s,
+      builder: (context, _) => Scaffold(
+        backgroundColor: dark ? AppColors.bgDark : AppColors.bgLight,
+        appBar: AppBar(
+          title: Text(_detail?.englishName ?? 'الحفظ'),
+          actions: [
+            Builder(builder: (context) {
               final count = s.mistakeCountForSurah(widget.surahNumber);
               if (count == 0) return const SizedBox.shrink();
               return TextButton.icon(
-                onPressed: () => s.resetSurahMistakeCount(widget.surahNumber),
-                icon: const Icon(Icons.refresh, size: 18, color: AppColors.danger),
+                onPressed: () => _confirmReset(context, count),
+                icon:
+                    const Icon(Icons.refresh, size: 18, color: AppColors.danger),
                 label: Text(
                   'تصفير ($count)',
                   style: const TextStyle(color: AppColors.danger),
                 ),
               );
-            },
+            }),
+          ],
+        ),
+        body: SafeArea(child: _body()),
+      ),
+    );
+  }
+
+  Future<void> _confirmReset(BuildContext context, int count) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('تصفير الأخطاء؟'),
+        content: Text('رح يتم حذف علامات الأخطاء الـ$count لهاي السورة.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+            child: const Text('تصفير'),
           ),
         ],
       ),
-      body: SafeArea(child: _body()),
     );
+    if (confirmed == true) {
+      await widget.state.resetSurahMistakeCount(widget.surahNumber);
+    }
   }
 
   Widget _body() {
@@ -132,7 +147,7 @@ class _SurahMemorizeScreenState extends State<SurahMemorizeScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       color: AppColors.accent.withValues(alpha: 0.08),
       child: const Text(
-        'اكبس على الآية اللي غلطت فيها لتسجيل خطأ',
+        'اكبس على الآية اللي غلطت فيها لتعليمها — اكبس عليها كمان مرة لإلغاء العلامة',
         style: TextStyle(fontSize: 12, color: AppColors.mutedDark),
         textAlign: TextAlign.center,
       ),
@@ -140,24 +155,27 @@ class _SurahMemorizeScreenState extends State<SurahMemorizeScreen> {
   }
 
   Widget _ayahTile(Ayah ayah) {
-    final dark = widget.state.darkMode;
-    final flashed = _justTappedAyah == ayah.numberInSurah;
+    final s = widget.state;
+    final dark = s.darkMode;
+    final marked = s.isSurahAyahMistake(widget.surahNumber, ayah.numberInSurah);
     return Material(
-      color: flashed
-          ? AppColors.danger.withValues(alpha: 0.18)
+      color: marked
+          ? AppColors.danger.withValues(alpha: 0.14)
           : (dark ? AppColors.panelDark : AppColors.panelLight),
       borderRadius: BorderRadius.circular(10),
       child: InkWell(
         borderRadius: BorderRadius.circular(10),
-        onTap: () => _logMistake(ayah.numberInSurah),
+        onTap: () =>
+            s.toggleSurahAyahMistake(widget.surahNumber, ayah.numberInSurah),
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: flashed
+              color: marked
                   ? AppColors.danger
                   : (dark ? AppColors.borderDark : AppColors.borderLight),
+              width: marked ? 1.4 : 1,
             ),
           ),
           child: Row(
@@ -169,13 +187,19 @@ class _SurahMemorizeScreenState extends State<SurahMemorizeScreen> {
                 margin: const EdgeInsets.only(left: 8, top: 2),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.gold),
+                  color: marked ? AppColors.danger : null,
+                  border: Border.all(
+                    color: marked ? AppColors.danger : AppColors.gold,
+                  ),
                 ),
                 alignment: Alignment.center,
-                child: Text(
-                  '${ayah.numberInSurah}',
-                  style: const TextStyle(fontSize: 10, color: AppColors.gold),
-                ),
+                child: marked
+                    ? const Icon(Icons.close, size: 14, color: Colors.white)
+                    : Text(
+                        '${ayah.numberInSurah}',
+                        style:
+                            const TextStyle(fontSize: 10, color: AppColors.gold),
+                      ),
               ),
               Expanded(
                 child: Text(
