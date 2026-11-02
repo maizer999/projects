@@ -1,13 +1,15 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../models/surah.dart';
 import '../state/app_state.dart';
 import '../theme.dart';
 
-/// Memorize/review flow for one surah: shows its ayahs and lets the user
-/// tap an ayah they got wrong to mark it. The mark stays (persisted) until
-/// tapped again to clear it, so coming back to the surah later shows
-/// exactly which ayahs still need work — the counter in the surah list is
-/// just how many ayahs are currently marked.
+/// Memorize/review flow for one surah: shows it as one continuous flowing
+/// mushaf-style text (not a card per ayah) and lets the user tap an ayah
+/// they got wrong to mark it. The mark stays (persisted) until tapped
+/// again to clear it, so coming back to the surah later shows exactly
+/// which ayahs still need work — the counter in the surah list is just
+/// how many ayahs are currently marked.
 class SurahMemorizeScreen extends StatefulWidget {
   const SurahMemorizeScreen({
     super.key,
@@ -126,15 +128,21 @@ class _SurahMemorizeScreenState extends State<SurahMemorizeScreen> {
     if (detail == null) {
       return const Center(child: CircularProgressIndicator());
     }
+    final showBismillah = detail.number != 1 && detail.number != 9;
     return Column(
       children: [
         _hint(),
         Expanded(
-          child: ListView.separated(
-            padding: const EdgeInsets.all(12),
-            itemCount: detail.ayahs.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (context, i) => _ayahTile(detail.ayahs[i]),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: _quranFrame(
+              child: Column(
+                children: [
+                  if (showBismillah) _bismillah(),
+                  _mushaf(detail, showBismillah),
+                ],
+              ),
+            ),
           ),
         ),
       ],
@@ -154,70 +162,108 @@ class _SurahMemorizeScreenState extends State<SurahMemorizeScreen> {
     );
   }
 
-  Widget _ayahTile(Ayah ayah) {
-    final s = widget.state;
-    final dark = s.darkMode;
-    final marked = s.isSurahAyahMistake(widget.surahNumber, ayah.numberInSurah);
-    return Material(
-      color: marked
-          ? AppColors.danger.withValues(alpha: 0.14)
-          : (dark ? AppColors.panelDark : AppColors.panelLight),
-      borderRadius: BorderRadius.circular(10),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(10),
-        onTap: () =>
-            s.toggleSurahAyahMistake(widget.surahNumber, ayah.numberInSurah),
-        child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: marked
-                  ? AppColors.danger
-                  : (dark ? AppColors.borderDark : AppColors.borderLight),
-              width: marked ? 1.4 : 1,
-            ),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 26,
-                height: 26,
-                margin: const EdgeInsets.only(left: 8, top: 2),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: marked ? AppColors.danger : null,
-                  border: Border.all(
-                    color: marked ? AppColors.danger : AppColors.gold,
-                  ),
-                ),
-                alignment: Alignment.center,
-                child: marked
-                    ? const Icon(Icons.close, size: 14, color: Colors.white)
-                    : Text(
-                        '${ayah.numberInSurah}',
-                        style:
-                            const TextStyle(fontSize: 10, color: AppColors.gold),
-                      ),
-              ),
-              Expanded(
-                child: Text(
-                  ayah.text,
-                  textDirection: TextDirection.rtl,
-                  textAlign: TextAlign.right,
-                  style: TextStyle(
-                    fontFamily: 'UthmanicHafs',
-                    fontSize: 24,
-                    height: 1.9,
-                    color: dark ? AppColors.textDark : AppColors.textLight,
-                  ),
-                ),
-              ),
-            ],
+  Widget _bismillah() {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 12),
+      child: Center(
+        child: Text(
+          'بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ',
+          textDirection: TextDirection.rtl,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: 'UthmanicHafs',
+            fontSize: 28,
+            color: AppColors.gold,
           ),
         ),
       ),
     );
+  }
+
+  Widget _mushaf(SurahDetail detail, bool stripFirst) {
+    final s = widget.state;
+    final dark = s.darkMode;
+    final textColor = dark ? AppColors.textDark : AppColors.textLight;
+    const size = 24.0;
+    final base = TextStyle(
+      fontFamily: 'UthmanicHafs',
+      fontSize: size,
+      color: textColor,
+      height: 2.0,
+    );
+
+    final spans = <InlineSpan>[];
+    for (var i = 0; i < detail.ayahs.length; i++) {
+      final a = detail.ayahs[i];
+      var text = a.text;
+      if (i == 0 && stripFirst) text = _stripBismillah(text);
+      final marked = s.isSurahAyahMistake(widget.surahNumber, a.numberInSurah);
+
+      final tokStyle = base.copyWith(
+        backgroundColor: marked ? AppColors.danger.withValues(alpha: 0.18) : null,
+        color: marked ? AppColors.danger : base.color,
+      );
+
+      final recognizer = TapGestureRecognizer()
+        ..onTap = () =>
+            s.toggleSurahAyahMistake(widget.surahNumber, a.numberInSurah);
+
+      spans.add(TextSpan(text: '$text ', style: tokStyle, recognizer: recognizer));
+      spans.add(TextSpan(
+        text: '﴿${_toArabicDigits(a.numberInSurah)}﴾ ',
+        style: base.copyWith(color: AppColors.gold, fontSize: size * 0.75),
+        recognizer: TapGestureRecognizer()
+          ..onTap = () =>
+              s.toggleSurahAyahMistake(widget.surahNumber, a.numberInSurah),
+      ));
+    }
+
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Text.rich(
+        TextSpan(children: spans),
+        textAlign: TextAlign.justify,
+        textDirection: TextDirection.rtl,
+      ),
+    );
+  }
+
+  Widget _quranFrame({required Widget child}) {
+    final dark = widget.state.darkMode;
+    final page = dark ? const Color(0xFF14183A) : const Color(0xFFFBF7EC);
+    const gold = AppColors.gold;
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: gold, width: 2),
+        boxShadow: [
+          BoxShadow(color: gold.withValues(alpha: 0.18), blurRadius: 14, spreadRadius: 1),
+        ],
+      ),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
+        decoration: BoxDecoration(
+          color: page,
+          borderRadius: BorderRadius.circular(9),
+          border: Border.all(color: gold.withValues(alpha: 0.55)),
+        ),
+        child: child,
+      ),
+    );
+  }
+
+  String _toArabicDigits(int n) {
+    const d = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    return n.toString().split('').map((c) {
+      final i = int.tryParse(c);
+      return i == null ? c : d[i];
+    }).join();
+  }
+
+  String _stripBismillah(String s) {
+    final r1 = RegExp(r'^بِسْمِ\s*ٱللَّهِ\s*ٱلرَّحْمَـٰنِ\s*ٱلرَّحِيمِ\s*');
+    final r2 = RegExp(r'^بِسْمِ\s*اللَّهِ\s*الرَّحْمَنِ\s*الرَّحِيمِ\s*');
+    return s.replaceFirst(r1, '').replaceFirst(r2, '');
   }
 }
