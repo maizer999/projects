@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-/// A full palette the user can pick in Settings. Dark mode (the app's
-/// chrome — toolbar, surah list, settings) is recolored entirely to the
-/// chosen hue. Light mode and the reading page itself stay warm
-/// cream/parchment on purpose (that's the "paper" the mushaf is printed
-/// on, not a brand color), and gold stays gold everywhere.
+/// A full palette the user can pick in Settings. Every surface in both
+/// dark and light mode — including the reading page's own card — is
+/// recolored to the chosen hue, keeping each color's original
+/// lightness/contrast so legibility doesn't change, only the hue. Gold
+/// stays gold everywhere (it's ornamental, not a brand color).
 class ThemePreset {
   final String id;
   final String label;
@@ -14,6 +14,14 @@ class ThemePreset {
   final Color bg2Dark;
   final Color textDark;
   final Color mutedDark;
+  final Color pageDark;
+  final Color bgLight;
+  final Color bg2Light;
+  final Color panelLight;
+  final Color borderLight;
+  final Color textLight;
+  final Color mutedLight;
+  final Color pageLight;
   const ThemePreset(
     this.id,
     this.label, {
@@ -23,6 +31,14 @@ class ThemePreset {
     required this.bg2Dark,
     required this.textDark,
     required this.mutedDark,
+    required this.pageDark,
+    required this.bgLight,
+    required this.bg2Light,
+    required this.panelLight,
+    required this.borderLight,
+    required this.textLight,
+    required this.mutedLight,
+    required this.pageLight,
   });
 }
 
@@ -36,6 +52,14 @@ const List<ThemePreset> themePresets = [
     bg2Dark: Color(0xFF15372A),
     textDark: Color(0xFFEFF5F0),
     mutedDark: Color(0xFFA9C2B2),
+    pageDark: Color(0xFF1A3B2B),
+    bgLight: Color(0xFFE2F8ED),
+    bg2Light: Color(0xFFCFF0E0),
+    panelLight: Color(0xFFF4FFFA),
+    borderLight: Color(0xFFAEE3C8),
+    textLight: Color(0xFF1F3329),
+    mutedLight: Color(0xFF5E7A6C),
+    pageLight: Color(0xFFDCFBEC),
   ),
   ThemePreset(
     'blue',
@@ -46,6 +70,14 @@ const List<ThemePreset> themePresets = [
     bg2Dark: Color(0xFF152537),
     textDark: Color(0xFFEFF2F5),
     mutedDark: Color(0xFFA9B5C2),
+    pageDark: Color(0xFF1A293B),
+    bgLight: Color(0xFFE2ECF8),
+    bg2Light: Color(0xFFCFDEF0),
+    panelLight: Color(0xFFF4F9FF),
+    borderLight: Color(0xFFAEC7E3),
+    textLight: Color(0xFF1F2833),
+    mutedLight: Color(0xFF5E6B7A),
+    pageLight: Color(0xFFDCEAFB),
   ),
   ThemePreset(
     'purple',
@@ -56,6 +88,14 @@ const List<ThemePreset> themePresets = [
     bg2Dark: Color(0xFF251537),
     textDark: Color(0xFFF2EFF5),
     mutedDark: Color(0xFFB5A9C2),
+    pageDark: Color(0xFF291A3B),
+    bgLight: Color(0xFFECE2F8),
+    bg2Light: Color(0xFFDECFF0),
+    panelLight: Color(0xFFF9F4FF),
+    borderLight: Color(0xFFC7AEE3),
+    textLight: Color(0xFF281F33),
+    mutedLight: Color(0xFF6B5E7A),
+    pageLight: Color(0xFFEADCFB),
   ),
   ThemePreset(
     'maroon',
@@ -66,6 +106,14 @@ const List<ThemePreset> themePresets = [
     bg2Dark: Color(0xFF37151D),
     textDark: Color(0xFFF5EFF0),
     mutedDark: Color(0xFFC2A9AF),
+    pageDark: Color(0xFF3B1A22),
+    bgLight: Color(0xFFF8E2E7),
+    bg2Light: Color(0xFFF0CFD7),
+    panelLight: Color(0xFFFFF4F7),
+    borderLight: Color(0xFFE3AEBA),
+    textLight: Color(0xFF331F24),
+    mutedLight: Color(0xFF7A5E65),
+    pageLight: Color(0xFFFBDCE3),
   ),
 ];
 
@@ -73,22 +121,24 @@ ThemePreset presetById(String id) =>
     themePresets.firstWhere((p) => p.id == id, orElse: () => themePresets[0]);
 
 class AppColors {
-  // Dark mode — set per the user's chosen preset (see [applyPreset]);
-  // these defaults are the "أخضر" preset.
+  // Every one of these is set per the user's chosen preset (see
+  // [applyPreset]) — the values below are just the "أخضر" defaults shown
+  // before a saved preference loads.
   static Color bgDark = themePresets[0].bgDark;
   static Color bg2Dark = themePresets[0].bg2Dark;
   static const panelDark = Color(0x1AFFFFFF); // rgba(255,255,255,0.10)
   static const borderDark = Color(0x1FFFFFFF);
   static Color textDark = themePresets[0].textDark;
   static Color mutedDark = themePresets[0].mutedDark;
+  static Color pageDark = themePresets[0].pageDark;
 
-  // Light mode — always warm parchment/cream, like an open mushaf page.
-  static const bgLight = Color(0xFFF8F2E2);
-  static const bg2Light = Color(0xFFF0E7CF);
-  static const panelLight = Color(0xFFFFFCF4);
-  static const borderLight = Color(0xFFE3D6AE);
-  static const textLight = Color(0xFF26331F);
-  static const mutedLight = Color(0xFF6B7A5E);
+  static Color bgLight = themePresets[0].bgLight;
+  static Color bg2Light = themePresets[0].bg2Light;
+  static Color panelLight = themePresets[0].panelLight;
+  static Color borderLight = themePresets[0].borderLight;
+  static Color textLight = themePresets[0].textLight;
+  static Color mutedLight = themePresets[0].mutedLight;
+  static Color pageLight = themePresets[0].pageLight;
 
   // Brand accent — mutable so the user's chosen preset (Settings) can
   // repaint every widget that reads it without plumbing a theme object
@@ -105,6 +155,14 @@ class AppColors {
     bg2Dark = preset.bg2Dark;
     textDark = preset.textDark;
     mutedDark = preset.mutedDark;
+    pageDark = preset.pageDark;
+    bgLight = preset.bgLight;
+    bg2Light = preset.bg2Light;
+    panelLight = preset.panelLight;
+    borderLight = preset.borderLight;
+    textLight = preset.textLight;
+    mutedLight = preset.mutedLight;
+    pageLight = preset.pageLight;
   }
 }
 
