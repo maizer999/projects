@@ -50,7 +50,7 @@ class _SurahListPanelState extends State<SurahListPanel> {
   }
 
   Widget _header() {
-    return const Padding(
+    return Padding(
       padding: EdgeInsets.fromLTRB(16, 16, 16, 12),
       child: Row(
         children: [

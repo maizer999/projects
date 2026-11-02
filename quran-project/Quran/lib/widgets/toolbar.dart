@@ -26,28 +26,23 @@ class AppToolbar extends StatelessWidget {
               icon: const Icon(Icons.menu),
               onPressed: onOpenDrawer,
             ),
-          if (s.arabic == null)
-            Expanded(
-              child: Text(
-                'اختر من القائمة',
-                style: TextStyle(fontSize: 11, color: AppColors.mutedDark),
-              ),
-            )
-          else
-            const Expanded(child: SizedBox.shrink()),
-          if (s.arabic != null)
-            Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: Text(
-                s.arabic!.name,
-                textDirection: TextDirection.rtl,
-                style: const TextStyle(
-                  fontSize: 22,
-                  color: AppColors.gold,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
+          Expanded(
+            child: s.arabic == null
+                ? Text(
+                    'اختر من القائمة',
+                    style: TextStyle(fontSize: 11, color: AppColors.mutedDark),
+                  )
+                : Text(
+                    s.arabic!.name,
+                    textDirection: TextDirection.rtl,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 22,
+                      color: AppColors.gold,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+          ),
           if (s.arabic != null && s.mistakeCountForSurah(s.arabic!.number) > 0)
             TextButton.icon(
               onPressed: () => _confirmReset(
@@ -144,7 +139,7 @@ class _SettingsSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            const Text('القارئ', style: _lbl),
+            Text('القارئ', style: _lbl),
             DropdownButtonFormField<String>(
               initialValue: state.reciterId,
               items: AppState.reciters
@@ -161,14 +156,14 @@ class _SettingsSheet extends StatelessWidget {
             const SizedBox(height: 16),
             Row(
               children: [
-                const Expanded(child: Text('حجم الخط', style: _lbl)),
+                Expanded(child: Text('حجم الخط', style: _lbl)),
                 Text(state.arSize.round().toString()),
               ],
             ),
             const SizedBox(height: 8),
             _SizeStepper(state: state),
             const SizedBox(height: 20),
-            const Text('لون التطبيق', style: _lbl),
+            Text('لون التطبيق', style: _lbl),
             const SizedBox(height: 8),
             _ColorPicker(state: state),
             const SizedBox(height: 16),
@@ -180,7 +175,7 @@ class _SettingsSheet extends StatelessWidget {
                 'إطار المصحف المزخرف',
                 style: TextStyle(fontSize: 14),
               ),
-              subtitle: const Text(
+              subtitle: Text(
                 'إطار ذهبي مزخرف حول صفحة القراءة، أو تصميم بسيط ونظيف',
                 style: _lbl,
               ),
