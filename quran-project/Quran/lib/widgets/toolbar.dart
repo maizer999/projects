@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../screens/memorization_screen.dart';
+import '../screens/surah_memorize_screen.dart';
 import '../state/app_state.dart';
 import '../theme.dart';
 
@@ -67,15 +66,19 @@ class AppToolbar extends StatelessWidget {
                 ),
               ),
             ),
-          IconButton(
-            tooltip: 'وضع الحفظ',
-            icon: const Icon(Icons.menu_book, color: AppColors.gold),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => MemorizationScreen(state: s),
+          if (s.arabic != null)
+            IconButton(
+              tooltip: 'وضع الحفظ',
+              icon: const Icon(Icons.menu_book, color: AppColors.gold),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => SurahMemorizeScreen(
+                    state: s,
+                    surahNumber: s.arabic!.number,
+                  ),
+                ),
               ),
             ),
-          ),
           IconButton(
             tooltip: 'Settings',
             icon: const Icon(Icons.tune),
@@ -142,22 +145,6 @@ class _SettingsSheet extends StatelessWidget {
                 if (v != null) state.setReciter(v);
               },
             ),
-            const SizedBox(height: 12),
-            const Text('Translation', style: _lbl),
-            DropdownButtonFormField<String>(
-              initialValue: state.translationId,
-              items: AppState.translations
-                  .map((t) =>
-                      DropdownMenuItem(value: t.id, child: Text(t.name)))
-                  .toList(),
-              onChanged: (v) {
-                if (v != null) state.setTranslation(v);
-              },
-            ),
-            const SizedBox(height: 12),
-            const Text('Arabic font', style: _lbl),
-            const SizedBox(height: 8),
-            _FontList(state: state),
             const SizedBox(height: 16),
             Row(
               children: [
@@ -175,76 +162,6 @@ class _SettingsSheet extends StatelessWidget {
 
   static const _lbl =
       TextStyle(fontSize: 12, color: AppColors.mutedDark);
-}
-
-class _FontList extends StatelessWidget {
-  const _FontList({required this.state});
-  final AppState state;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        for (final f in AppState.fonts)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(10),
-              onTap: () => state.setFont(f.key),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  color: state.fontKey == f.key
-                      ? AppColors.accent.withValues(alpha: 0.14)
-                      : null,
-                  border: Border.all(
-                    color: state.fontKey == f.key
-                        ? AppColors.accent
-                        : (state.darkMode
-                            ? AppColors.borderDark
-                            : AppColors.borderLight),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      state.fontKey == f.key
-                          ? Icons.check_circle
-                          : Icons.circle_outlined,
-                      size: 18,
-                      color: state.fontKey == f.key
-                          ? AppColors.accent
-                          : AppColors.mutedDark,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        f.label,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      'بِسْمِ ٱللَّهِ',
-                      textDirection: TextDirection.rtl,
-                      style: GoogleFonts.getFont(
-                        f.family,
-                        fontSize: 18,
-                        color: AppColors.gold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
 }
 
 class _SizeStepper extends StatelessWidget {
