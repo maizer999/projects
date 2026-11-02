@@ -174,7 +174,9 @@ class _SurahListPanelState extends State<SurahListPanel> {
           key: PageStorageKey('juz_${juz.number}'),
           initiallyExpanded: expanded,
           onExpansionChanged: (open) {
-            setState(() => _expandedJuz = open ? juz.number : null);
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) setState(() => _expandedJuz = open ? juz.number : null);
+            });
           },
           tilePadding: const EdgeInsets.symmetric(horizontal: 12),
           leading: Container(
@@ -225,6 +227,8 @@ class _SurahListPanelState extends State<SurahListPanel> {
                 ),
               ),
           ],
+            ),
+          ),
         ),
       ),
     );
