@@ -34,9 +34,9 @@ class QuranApp extends StatelessWidget {
       builder: (context, _) => MaterialApp(
         title: 'Al-Quran',
         debugShowCheckedModeBanner: false,
-        theme: buildTheme(dark: false),
+        theme: buildTheme(dark: true),
         darkTheme: buildTheme(dark: true),
-        themeMode: state.darkMode ? ThemeMode.dark : ThemeMode.light,
+        themeMode: ThemeMode.dark,
         home: HomeScreen(state: state),
       ),
     );

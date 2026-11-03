@@ -49,7 +49,8 @@ class AppState extends ChangeNotifier {
   // Preferences
   late String reciterId = _prefs.getString('reciter', 'ar.alafasy');
   late double arSize = _prefs.getInt('arSize', 22).toDouble();
-  late bool darkMode = _prefs.getBool('dark', true);
+  // The app is dark-mode only; light mode is no longer offered.
+  bool get darkMode => true;
   late int lastSurah = _prefs.getInt('lastSurah', 0);
   late String accentPresetId = _prefs.getString('accentPreset', 'green');
   late bool ornateFrame = _prefs.getBool('ornateFrame', true);
@@ -127,12 +128,6 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> bumpArSize(double delta) => setArSize(arSize + delta);
-
-  Future<void> toggleTheme() async {
-    darkMode = !darkMode;
-    await _prefs.setBool('dark', darkMode);
-    notifyListeners();
-  }
 
   Future<void> setAccentPreset(String id) async {
     accentPresetId = id;

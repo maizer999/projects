@@ -61,11 +61,6 @@ class AppToolbar extends StatelessWidget {
             icon: const Icon(Icons.tune),
             onPressed: () => _openSettings(context),
           ),
-          IconButton(
-            tooltip: 'Toggle theme',
-            icon: Icon(s.darkMode ? Icons.light_mode : Icons.dark_mode),
-            onPressed: s.toggleTheme,
-          ),
         ],
       ),
     );
