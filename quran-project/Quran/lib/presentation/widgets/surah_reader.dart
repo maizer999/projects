@@ -15,8 +15,6 @@ import '../providers/quran_providers.dart';
 import '../providers/reader_provider.dart';
 import '../providers/settings_provider.dart';
 
-const String _bismillah = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ';
-
 /// Shows the current surah as flowing text in the chosen Arabic font.
 ///
 /// Tap an ayah: in Listen mode it plays from there; in Memorize mode it
@@ -94,7 +92,9 @@ class _SurahReaderState extends ConsumerState<SurahReader> {
       height: 2.1,
       color: AppColors.textDark,
     );
-    final markerStyle = base.copyWith(fontSize: size * 0.7, color: AppColors.gold);
+    final markerStyle = base.copyWith(color: AppColors.gold);
+    // The Basmala in the same encoding as the text (Al-Fatiha, ayah 1).
+    final basmala = ref.watch(getSurahAyahsProvider)(1).first.text;
 
     final spans = <InlineSpan>[];
     for (final a in ayahs) {
@@ -115,7 +115,7 @@ class _SurahReaderState extends ConsumerState<SurahReader> {
         recognizer: recognizer,
       ));
       spans.add(TextSpan(
-        text: '﴿${toArabicDigits(a.number)}﴾ ',
+        text: '${font.ayahEnd}${toArabicDigits(a.number)} ',
         style: markerStyle.copyWith(backgroundColor: bg),
         recognizer: recognizer,
       ));
@@ -145,7 +145,7 @@ class _SurahReaderState extends ConsumerState<SurahReader> {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: Text(
-                      _bismillah,
+                      basmala,
                       textAlign: TextAlign.center,
                       textDirection: TextDirection.rtl,
                       style: base.copyWith(color: AppColors.gold, fontSize: size * 1.05),
