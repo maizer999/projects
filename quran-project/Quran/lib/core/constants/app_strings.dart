@@ -8,6 +8,20 @@ class AppStrings {
   static const String cancel = 'إلغاء';
   static const String noResults = 'لا توجد نتائج.';
   static const String searchHint = 'ابحث عن سورة...';
+  static const String tabAll = 'الكل';
+  static const String tabFavorites = 'المفضلة';
+  static const String favorites = 'المفضلة';
+  static const String addFavorite = 'إضافة إلى المفضلة';
+  static const String removeFavorite = 'إزالة من المفضلة';
+  static const String noFavorites = 'لا يوجد سور في المفضلة بعد.\nاضغط على ⭐ بجانب السورة لإضافتها.';
+  static const String tabBookmarks = 'المرجعية';
+  static const String bookmarks = 'المرجعية';
+  static const String addBookmark = 'إضافة مرجعية';
+  static const String removeBookmark = 'إزالة المرجعية';
+  static const String bookmarkAdded = 'تمت إضافة الصفحة إلى المرجعية';
+  static const String bookmarkRemoved = 'تمت إزالة الصفحة من المرجعية';
+  static const String noBookmarks =
+      'لا يوجد مرجعيات بعد.\nاضغط على 🔖 في الشريط السفلي لحفظ الصفحة الحالية.';
   static String juzTitle(String n) => 'الجزء $n';
   static String pageLabel(String n) => 'صفحة $n';
 
@@ -30,8 +44,6 @@ class AppStrings {
   static const String reciter = 'القارئ';
   static const String fontSize = 'حجم الخط';
   static const String arabicFont = 'نوع الخط';
-  static const String fontIncrease = 'تكبير الخط';
-  static const String fontDecrease = 'تصغير الخط';
   static const String appColor = 'لون التطبيق';
   static const String tajweed = 'ألوان التجويد';
   static const String tajweedSubtitle = 'تلوين أحكام التجويد في صفحة المصحف';

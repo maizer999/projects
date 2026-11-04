@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/constants/app_constants.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/arabic_numerals.dart';
 import '../providers/mistakes_provider.dart';
 import '../providers/quran_providers.dart';
 import '../providers/reader_provider.dart';
-import '../providers/settings_provider.dart';
 import 'settings_sheet.dart';
 
 class AppToolbar extends ConsumerWidget {
@@ -22,7 +20,6 @@ class AppToolbar extends ConsumerWidget {
     final surah = ref.watch(surahsProvider)[reader.surahNumber - 1];
     final mistakes = ref.watch(mistakeCountProvider(reader.surahNumber));
     final memorize = reader.mode == ReaderMode.memorize;
-    final fontSize = ref.watch(settingsProvider.select((s) => s.mushafFontSize));
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -36,8 +33,6 @@ class AppToolbar extends ConsumerWidget {
           children: [
             Row(
               children: [
-                if (onOpenDrawer != null)
-                  IconButton(icon: const Icon(Icons.menu), onPressed: onOpenDrawer),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,32 +64,13 @@ class AppToolbar extends ConsumerWidget {
                       style: const TextStyle(color: AppColors.danger),
                     ),
                   ),
-                IconButton.filledTonal(
-                  tooltip: AppStrings.fontDecrease,
-                  iconSize: 26,
-                  icon: const Icon(Icons.text_decrease),
-                  onPressed: fontSize > AppConstants.mushafFontMin
-                      ? () => ref
-                          .read(settingsProvider.notifier)
-                          .bumpFontSize(-AppConstants.mushafFontStep)
-                      : null,
-                ),
-                const SizedBox(width: 6),
-                IconButton.filledTonal(
-                  tooltip: AppStrings.fontIncrease,
-                  iconSize: 26,
-                  icon: const Icon(Icons.text_increase),
-                  onPressed: fontSize < AppConstants.mushafFontMax
-                      ? () => ref
-                          .read(settingsProvider.notifier)
-                          .bumpFontSize(AppConstants.mushafFontStep)
-                      : null,
-                ),
                 IconButton(
                   tooltip: AppStrings.settingsTitle,
                   icon: const Icon(Icons.tune),
                   onPressed: () => showSettingsSheet(context),
                 ),
+                if (onOpenDrawer != null)
+                  IconButton(icon: const Icon(Icons.menu), onPressed: onOpenDrawer),
               ],
             ),
             const SizedBox(height: 6),
