@@ -11,6 +11,6 @@ class StorageKeys {
   static const String lastPage = 'lastPage';
   static const String lastSurah = 'lastSurah';
 
-  /// JSON: { "<surahNumber>": [ayahNumberInSurah, ...] }
+  /// JSON: `{ "surahNumber": [ayahNumberInSurah, ...] }`
   static const String surahMistakeAyahs = 'surahMistakeAyahs';
 }
