@@ -8,6 +8,12 @@ class AppStrings {
   static const String cancel = 'إلغاء';
   static const String noResults = 'لا توجد نتائج.';
   static const String searchHint = 'ابحث عن سورة...';
+  static const String tabAll = 'الكل';
+  static const String tabFavorites = 'المفضلة';
+  static const String favorites = 'المفضلة';
+  static const String addFavorite = 'إضافة إلى المفضلة';
+  static const String removeFavorite = 'إزالة من المفضلة';
+  static const String noFavorites = 'لا يوجد سور في المفضلة بعد.\nاضغط على ⭐ بجانب السورة لإضافتها.';
   static String juzTitle(String n) => 'الجزء $n';
   static String pageLabel(String n) => 'صفحة $n';
 

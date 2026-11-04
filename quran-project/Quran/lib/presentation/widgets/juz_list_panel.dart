@@ -8,12 +8,14 @@ import '../../core/utils/arabic_numerals.dart';
 import '../../domain/entities/juz.dart';
 import '../../domain/entities/surah.dart';
 import '../providers/dependency_providers.dart';
+import '../providers/favorites_provider.dart';
 import '../providers/mistakes_provider.dart';
 import '../providers/quran_providers.dart';
 import '../providers/reader_provider.dart';
 
 /// 30 Juz, each expanding to its surahs. Tapping a surah opens its first
-/// page in the reader.
+/// page in the reader. A segmented control at the top switches between the
+/// full juz index and the user's favourites.
 class JuzListPanel extends ConsumerStatefulWidget {
   const JuzListPanel({super.key, this.onSurahOpened});
 
@@ -41,12 +43,34 @@ class _JuzListPanelState extends ConsumerState<JuzListPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final tab = ref.watch(panelTabProvider);
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const _Header(),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+            child: SegmentedButton<PanelTab>(
+              showSelectedIcon: false,
+              segments: const [
+                ButtonSegment(
+                  value: PanelTab.all,
+                  icon: Icon(Icons.menu_book, size: 16),
+                  label: Text(AppStrings.tabAll),
+                ),
+                ButtonSegment(
+                  value: PanelTab.favorites,
+                  icon: Icon(Icons.star_rounded, size: 16),
+                  label: Text(AppStrings.tabFavorites),
+                ),
+              ],
+              selected: {tab},
+              onSelectionChanged: (s) =>
+                  ref.read(panelTabProvider.notifier).set(s.first),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: TextField(
@@ -64,16 +88,23 @@ class _JuzListPanelState extends ConsumerState<JuzListPanel> {
             ),
           ),
           const SizedBox(height: 8),
-          Expanded(
-            child: _query.trim().isEmpty ? _juzList() : _searchResults(),
-          ),
+          Expanded(child: _body(tab)),
         ],
       ),
     );
   }
 
-  Widget _searchResults() {
-    final matches = ref.read(searchSurahsProvider)(_query);
+  Widget _body(PanelTab tab) {
+    if (_query.trim().isNotEmpty) return _searchResults(tab);
+    return tab == PanelTab.favorites ? _favoritesList() : _juzList();
+  }
+
+  Widget _searchResults(PanelTab tab) {
+    var matches = ref.read(searchSurahsProvider)(_query);
+    if (tab == PanelTab.favorites) {
+      final favs = ref.watch(favoritesProvider);
+      matches = matches.where((s) => favs.contains(s.number)).toList();
+    }
     if (matches.isEmpty) return const Center(child: Text(AppStrings.noResults));
     return ListView.separated(
       padding: const EdgeInsets.all(8),
@@ -90,6 +121,31 @@ class _JuzListPanelState extends ConsumerState<JuzListPanel> {
       padding: const EdgeInsets.all(8),
       itemCount: juzs.length,
       itemBuilder: (_, i) => _JuzTile(juz: juzs[i], onOpen: _open),
+    );
+  }
+
+  Widget _favoritesList() {
+    final favs = ref.watch(favoritesProvider);
+    final all = ref.watch(surahsProvider);
+    final list = all.where((s) => favs.contains(s.number)).toList();
+    if (list.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(24),
+        child: Center(
+          child: Text(
+            AppStrings.noFavorites,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppColors.mutedDark, height: 1.6),
+          ),
+        ),
+      );
+    }
+    return ListView.separated(
+      padding: const EdgeInsets.all(8),
+      itemCount: list.length,
+      separatorBuilder: (_, _) => const SizedBox(height: 4),
+      itemBuilder: (_, i) =>
+          _SurahTile(surah: list[i], onTap: () => _open(list[i])),
     );
   }
 }
@@ -215,6 +271,7 @@ class _SurahTile extends ConsumerWidget {
     final selected =
         ref.watch(readerProvider.select((r) => r.surahNumber)) == surah.number;
     final mistakes = ref.watch(mistakeCountProvider(surah.number));
+    final isFav = ref.watch(isFavoriteProvider(surah.number));
 
     return Material(
       color: selected
@@ -289,6 +346,20 @@ class _SurahTile extends ConsumerWidget {
               Text(
                 AppStrings.pageLabel(toArabicDigits(surah.startPage)),
                 style: TextStyle(fontSize: 10, color: AppColors.mutedDark),
+              ),
+              const SizedBox(width: 4),
+              InkWell(
+                customBorder: const CircleBorder(),
+                onTap: () =>
+                    ref.read(favoritesProvider.notifier).toggle(surah.number),
+                child: Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Icon(
+                    isFav ? Icons.star_rounded : Icons.star_outline_rounded,
+                    size: 20,
+                    color: isFav ? AppColors.gold : AppColors.mutedDark,
+                  ),
+                ),
               ),
             ],
           ),

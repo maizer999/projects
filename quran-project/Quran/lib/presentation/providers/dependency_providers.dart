@@ -4,12 +4,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/datasources/audio_player_data_source.dart';
 import '../../data/datasources/preferences_data_source.dart';
 import '../../data/repositories/audio_repository_impl.dart';
+import '../../data/repositories/favorites_repository_impl.dart';
 import '../../data/repositories/mistakes_repository_impl.dart';
 import '../../data/repositories/settings_repository_impl.dart';
 import '../../domain/repositories/audio_repository.dart';
+import '../../domain/repositories/favorites_repository.dart';
 import '../../domain/repositories/mistakes_repository.dart';
 import '../../domain/repositories/quran_repository.dart';
 import '../../domain/repositories/settings_repository.dart';
+import '../../domain/usecases/favorites_usecases.dart';
 import '../../domain/usecases/mistakes_usecases.dart';
 import '../../domain/usecases/quran_usecases.dart';
 import '../../domain/usecases/settings_usecases.dart';
@@ -43,6 +46,10 @@ final mistakesRepositoryProvider = Provider<MistakesRepository>(
   (ref) => MistakesRepositoryImpl(ref.watch(preferencesDataSourceProvider)),
 );
 
+final favoritesRepositoryProvider = Provider<FavoritesRepository>(
+  (ref) => FavoritesRepositoryImpl(ref.watch(preferencesDataSourceProvider)),
+);
+
 final audioRepositoryProvider = Provider<AudioRepository>((ref) {
   final repo = AudioRepositoryImpl(AudioPlayerDataSource());
   ref.onDispose(repo.dispose);
@@ -73,3 +80,8 @@ final toggleAyahMistakeProvider =
     Provider((ref) => ToggleAyahMistake(ref.watch(mistakesRepositoryProvider)));
 final resetSurahMistakesProvider =
     Provider((ref) => ResetSurahMistakes(ref.watch(mistakesRepositoryProvider)));
+
+final loadFavoritesProvider =
+    Provider((ref) => LoadFavorites(ref.watch(favoritesRepositoryProvider)));
+final toggleSurahFavoriteProvider =
+    Provider((ref) => ToggleSurahFavorite(ref.watch(favoritesRepositoryProvider)));

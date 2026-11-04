@@ -5,6 +5,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/arabic_numerals.dart';
+import '../providers/favorites_provider.dart';
 import '../providers/player_provider.dart';
 import '../providers/quran_providers.dart';
 import '../providers/settings_provider.dart';
@@ -34,8 +35,14 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
         MaterialPageRoute<void>(builder: (_) => const ContactScreen()),
       );
 
+  void _openFavorites() {
+    ref.read(panelTabProvider.notifier).set(PanelTab.favorites);
+    Scaffold.maybeOf(context)?.openEndDrawer();
+  }
+
   @override
   Widget build(BuildContext context) {
+    ref.watch(settingsProvider.select((s) => s.themePresetId));
     return Directionality(
       textDirection: TextDirection.rtl,
       child: DecoratedBox(
@@ -51,7 +58,11 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
             alignment: Alignment.bottomCenter,
             child: _expanded
                 ? _ExpandedPlayer(onCollapse: () => setState(() => _expanded = false))
-                : _CollapsedToolbar(onListen: _openPlayer, onContact: _openContact),
+                : _CollapsedToolbar(
+                    onListen: _openPlayer,
+                    onContact: _openContact,
+                    onFavorites: _openFavorites,
+                  ),
           ),
         ),
       ),
@@ -60,9 +71,14 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
 }
 
 class _CollapsedToolbar extends ConsumerWidget {
-  const _CollapsedToolbar({required this.onListen, required this.onContact});
+  const _CollapsedToolbar({
+    required this.onListen,
+    required this.onContact,
+    required this.onFavorites,
+  });
   final VoidCallback onListen;
   final VoidCallback onContact;
+  final VoidCallback onFavorites;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -86,6 +102,12 @@ class _CollapsedToolbar extends ConsumerWidget {
               label: AppStrings.contactUs,
               onTap: onContact,
             ),
+          ),
+          const SizedBox(width: 10),
+          _IconOnlyButton(
+            icon: Icons.star_rounded,
+            tooltip: AppStrings.favorites,
+            onTap: onFavorites,
           ),
         ],
       ),
@@ -257,6 +279,41 @@ class _ToolbarButton extends StatelessWidget {
                 style: TextStyle(color: fg, fontSize: 14, fontWeight: FontWeight.w600),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _IconOnlyButton extends StatelessWidget {
+  const _IconOnlyButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: Tooltip(
+          message: tooltip,
+          child: Ink(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              color: AppColors.panelDark,
+              border: Border.all(color: AppColors.borderDark),
+            ),
+            child: Icon(icon, color: AppColors.gold, size: 22),
           ),
         ),
       ),

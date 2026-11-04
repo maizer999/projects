@@ -14,4 +14,7 @@ class StorageKeys {
 
   /// JSON: `{ "surahNumber": [ayahNumberInSurah, ...] }`
   static const String surahMistakeAyahs = 'surahMistakeAyahs';
+
+  /// JSON array of surah numbers the user marked as favourite.
+  static const String favoriteSurahs = 'favoriteSurahs';
 }
