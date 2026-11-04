@@ -118,26 +118,6 @@ class _MushafPageItem extends ConsumerStatefulWidget {
 }
 
 class _MushafPageItemState extends ConsumerState<_MushafPageItem> {
-  final _zoom = TransformationController();
-  double _appliedScale = 1;
-
-  @override
-  void dispose() {
-    _zoom.dispose();
-    super.dispose();
-  }
-
-  void _applyScale(double scale, Size viewport) {
-    if ((scale - _appliedScale).abs() < 0.001) return;
-    _appliedScale = scale;
-    // Scale around the viewport's centre so the page grows outward instead of
-    // sliding off its origin (top-right in RTL / top-left otherwise).
-    final tx = viewport.width * (1 - scale) / 2;
-    final ty = viewport.height * (1 - scale) / 2;
-    _zoom.value = Matrix4.identity()
-      ..translateByDouble(tx, ty, 0, 1)
-      ..scaleByDouble(scale, scale, 1, 1);
-  }
 
   mt.MushafColors _colors(bool memorize) => mt.MushafColors.dark.copyWith(
         paper: AppColors.pageDark,
@@ -180,9 +160,6 @@ class _MushafPageItemState extends ConsumerState<_MushafPageItem> {
     final highlighted = ref.watch(highlightedAyahsProvider);
     final colors = _colors(memorize);
 
-    final scale = (settings.mushafFontSize / AppConstants.mushafFontDefault)
-        .clamp(AppConstants.mushafZoomMin, AppConstants.mushafZoomMax);
-
     final pageView = ColoredBox(
       color: colors.paper,
       child: Padding(
@@ -204,22 +181,7 @@ class _MushafPageItemState extends ConsumerState<_MushafPageItem> {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-      child: ClipRect(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) _applyScale(scale, constraints.biggest);
-            });
-            return InteractiveViewer(
-              transformationController: _zoom,
-              minScale: AppConstants.mushafZoomMin,
-              maxScale: AppConstants.mushafZoomMax,
-              boundaryMargin: const EdgeInsets.all(double.infinity),
-              child: framed,
-            );
-          },
-        ),
-      ),
+      child: framed,
     );
   }
 }
