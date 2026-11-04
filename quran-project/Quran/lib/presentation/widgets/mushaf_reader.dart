@@ -109,9 +109,35 @@ class _ModeHint extends StatelessWidget {
   }
 }
 
-class _MushafPageItem extends ConsumerWidget {
+class _MushafPageItem extends ConsumerStatefulWidget {
   const _MushafPageItem({required this.page});
   final int page;
+
+  @override
+  ConsumerState<_MushafPageItem> createState() => _MushafPageItemState();
+}
+
+class _MushafPageItemState extends ConsumerState<_MushafPageItem> {
+  final _zoom = TransformationController();
+  double _appliedScale = 1;
+
+  @override
+  void dispose() {
+    _zoom.dispose();
+    super.dispose();
+  }
+
+  void _applyScale(double scale, Size viewport) {
+    if ((scale - _appliedScale).abs() < 0.001) return;
+    _appliedScale = scale;
+    // Scale around the viewport's centre so the page grows outward instead of
+    // sliding off its origin (top-right in RTL / top-left otherwise).
+    final tx = viewport.width * (1 - scale) / 2;
+    final ty = viewport.height * (1 - scale) / 2;
+    _zoom.value = Matrix4.identity()
+      ..translateByDouble(tx, ty, 0, 1)
+      ..scaleByDouble(scale, scale, 1, 1);
+  }
 
   mt.MushafColors _colors(bool memorize) => mt.MushafColors.dark.copyWith(
         paper: AppColors.pageDark,
@@ -125,7 +151,7 @@ class _MushafPageItem extends ConsumerWidget {
         ),
       );
 
-  Future<void> _onAyahTap(BuildContext context, WidgetRef ref, int ayahId) async {
+  Future<void> _onAyahTap(BuildContext context, int ayahId) async {
     final ayah = ref.read(getAyahByIdProvider)(ayahId);
     if (ayah == null) return;
     if (ref.read(readerProvider).mode == ReaderMode.listen) {
@@ -148,32 +174,52 @@ class _MushafPageItem extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final settings = ref.watch(settingsProvider);
     final memorize = ref.watch(readerProvider.select((s) => s.mode)) == ReaderMode.memorize;
     final highlighted = ref.watch(highlightedAyahsProvider);
     final colors = _colors(memorize);
+
+    final scale = (settings.mushafFontSize / AppConstants.mushafFontDefault)
+        .clamp(AppConstants.mushafZoomMin, AppConstants.mushafZoomMax);
 
     final pageView = ColoredBox(
       color: colors.paper,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
         child: mt.MushafPage(
-          page: page,
+          page: widget.page,
           colors: colors,
           tajweed: settings.tajweed,
-          maxFontSize: settings.mushafFontSize,
+          maxFontSize: AppConstants.mushafFontDefault,
           highlightedAyahs: highlighted,
-          onAyahTap: (id) => _onAyahTap(context, ref, id),
+          onAyahTap: (id) => _onAyahTap(context, id),
         ),
       ),
     );
 
+    final framed = settings.ornateFrame
+        ? _OrnateFrame(child: pageView)
+        : _PlainFrame(child: pageView);
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-      child: settings.ornateFrame
-          ? _OrnateFrame(child: pageView)
-          : _PlainFrame(child: pageView),
+      child: ClipRect(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) _applyScale(scale, constraints.biggest);
+            });
+            return InteractiveViewer(
+              transformationController: _zoom,
+              minScale: AppConstants.mushafZoomMin,
+              maxScale: AppConstants.mushafZoomMax,
+              boundaryMargin: const EdgeInsets.all(double.infinity),
+              child: framed,
+            );
+          },
+        ),
+      ),
     );
   }
 }

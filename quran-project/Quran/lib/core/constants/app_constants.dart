@@ -12,9 +12,14 @@ class AppConstants {
 
   // ---- Mushaf font size (ceiling passed to MushafPage.maxFontSize) ----
   static const double mushafFontMin = 20;
-  static const double mushafFontMax = 60;
+  static const double mushafFontMax = 68;
   static const double mushafFontStep = 2;
   static const double mushafFontDefault = 34;
+
+  /// Pinch-zoom / font-button scale bounds (derived from the font range so
+  /// the +/- buttons and gesture stay in sync).
+  static const double mushafZoomMin = mushafFontMin / mushafFontDefault; // ≈0.59
+  static const double mushafZoomMax = mushafFontMax / mushafFontDefault; // ≈2.0
 
   // ---- Audio ----
   static const List<double> playbackSpeeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];

@@ -56,12 +56,17 @@ class _JuzListPanelState extends ConsumerState<JuzListPanel> {
                 hintText: AppStrings.searchHint,
                 prefixIcon: Icon(Icons.search, size: 18),
                 isDense: true,
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
               ),
             ),
           ),
           const SizedBox(height: 8),
-          Expanded(child: _query.trim().isEmpty ? _juzList() : _searchResults()),
+          Expanded(
+            child: _query.trim().isEmpty ? _juzList() : _searchResults(),
+          ),
         ],
       ),
     );
@@ -74,7 +79,8 @@ class _JuzListPanelState extends ConsumerState<JuzListPanel> {
       padding: const EdgeInsets.all(8),
       itemCount: matches.length,
       separatorBuilder: (_, _) => const SizedBox(height: 4),
-      itemBuilder: (_, i) => _SurahTile(surah: matches[i], onTap: () => _open(matches[i])),
+      itemBuilder: (_, i) =>
+          _SurahTile(surah: matches[i], onTap: () => _open(matches[i])),
     );
   }
 
@@ -93,41 +99,47 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(colors: [AppColors.accent, AppColors.accent2]),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              alignment: Alignment.center,
-              child: const Text(
-                'ق',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
-              ),
+    padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+    child: Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [AppColors.accent, AppColors.accent2],
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    AppConstants.appTitle,
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                  ),
-                  Text(
-                    AppStrings.appSubtitle,
-                    style: TextStyle(fontSize: 11, color: AppColors.mutedDark),
-                  ),
-                ],
-              ),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          alignment: Alignment.center,
+          child: const Text(
+            'ق',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
-          ],
+          ),
         ),
-      );
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                AppConstants.appTitle,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+              Text(
+                AppStrings.appSubtitle,
+                style: TextStyle(fontSize: 11, color: AppColors.mutedDark),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
 }
 
 class _JuzTile extends StatelessWidget {
@@ -140,48 +152,53 @@ class _JuzTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
       decoration: BoxDecoration(
-        color: AppColors.panelDark,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.borderDark),
       ),
       clipBehavior: Clip.antiAlias,
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          key: PageStorageKey('juz_${juz.number}'),
-          tilePadding: const EdgeInsets.symmetric(horizontal: 12),
-          leading: Container(
-            width: 32,
-            height: 32,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: AppColors.bg2Dark,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.borderDark),
-            ),
-            child: Text(
-              toArabicDigits(juz.number),
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-            ),
-          ),
-          title: Text(
-            AppStrings.juzTitle(toArabicDigits(juz.number)),
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-          ),
-          subtitle: Text(
-            juz.surahs.map((s) => s.nameArabic).join(' · '),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 11, color: AppColors.mutedDark),
-          ),
-          childrenPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-          children: [
-            for (final s in juz.surahs)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: _SurahTile(surah: s, onTap: () => onOpen(s)),
+      child: Material(
+        color: AppColors.panelDark,
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            key: PageStorageKey('juz_${juz.number}'),
+            tilePadding: const EdgeInsets.symmetric(horizontal: 12),
+            leading: Container(
+              width: 32,
+              height: 32,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: AppColors.bg2Dark,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.borderDark),
               ),
-          ],
+              child: Text(
+                toArabicDigits(juz.number),
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            title: Text(
+              AppStrings.juzTitle(toArabicDigits(juz.number)),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              juz.surahs.map((s) => s.nameArabic).join(' · '),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 11, color: AppColors.mutedDark),
+            ),
+            childrenPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+            children: [
+              for (final s in juz.surahs)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: _SurahTile(surah: s, onTap: () => onOpen(s)),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -195,11 +212,14 @@ class _SurahTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selected = ref.watch(readerProvider.select((r) => r.surahNumber)) == surah.number;
+    final selected =
+        ref.watch(readerProvider.select((r) => r.surahNumber)) == surah.number;
     final mistakes = ref.watch(mistakeCountProvider(surah.number));
 
     return Material(
-      color: selected ? AppColors.accent.withValues(alpha: 0.18) : AppColors.bg2Dark,
+      color: selected
+          ? AppColors.accent.withValues(alpha: 0.18)
+          : AppColors.bg2Dark,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
@@ -208,7 +228,9 @@ class _SurahTile extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: selected ? AppColors.accent2 : AppColors.borderDark),
+            border: Border.all(
+              color: selected ? AppColors.accent2 : AppColors.borderDark,
+            ),
           ),
           child: Row(
             children: [
@@ -222,7 +244,10 @@ class _SurahTile extends ConsumerWidget {
                 ),
                 child: Text(
                   toArabicDigits(surah.number),
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
@@ -239,11 +264,16 @@ class _SurahTile extends ConsumerWidget {
               ),
               if (mistakes > 0) ...[
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.danger.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.danger.withValues(alpha: 0.5)),
+                    border: Border.all(
+                      color: AppColors.danger.withValues(alpha: 0.5),
+                    ),
                   ),
                   child: Text(
                     toArabicDigits(mistakes),

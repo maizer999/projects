@@ -21,6 +21,10 @@ class QuranApp extends ConsumerWidget {
       theme: theme,
       darkTheme: theme,
       themeMode: ThemeMode.dark,
+      builder: (context, child) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: child ?? const SizedBox.shrink(),
+      ),
       home: const HomeScreen(),
     );
   }
