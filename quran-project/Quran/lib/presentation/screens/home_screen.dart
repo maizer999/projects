@@ -24,7 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final main = Column(
       children: [
         AppToolbar(
-          onOpenDrawer: wide ? null : () => _scaffoldKey.currentState?.openDrawer(),
+          onOpenDrawer: wide ? null : () => _scaffoldKey.currentState?.openEndDrawer(),
         ),
         const Expanded(child: SurahReader()),
         const PlayerBar(),
@@ -33,7 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       key: _scaffoldKey,
-      drawer: wide
+      endDrawer: wide
           ? null
           : Drawer(
               width: AppConstants.drawerWidth,
@@ -48,9 +48,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ? Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(width: AppConstants.sidePanelWidth, child: JuzListPanel()),
-                  const VerticalDivider(width: 1),
                   Expanded(child: main),
+                  const VerticalDivider(width: 1),
+                  const SizedBox(width: AppConstants.sidePanelWidth, child: JuzListPanel()),
                 ],
               )
             : main,

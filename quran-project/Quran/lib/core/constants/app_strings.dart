@@ -30,8 +30,6 @@ class AppStrings {
   static const String reciter = 'القارئ';
   static const String fontSize = 'حجم الخط';
   static const String arabicFont = 'نوع الخط';
-  static const String fontIncrease = 'تكبير الخط';
-  static const String fontDecrease = 'تصغير الخط';
   static const String appColor = 'لون التطبيق';
   static const String tajweed = 'ألوان التجويد';
   static const String tajweedSubtitle = 'تلوين أحكام التجويد في صفحة المصحف';
