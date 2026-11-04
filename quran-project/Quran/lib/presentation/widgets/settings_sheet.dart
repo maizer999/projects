@@ -87,18 +87,6 @@ class SettingsSheet extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              Text(AppStrings.readingMode, style: _label),
-              DropdownButtonFormField<String>(
-                initialValue: s.readingMode,
-                items: const [
-                  DropdownMenuItem(value: kReadingFlow, child: Text(AppStrings.readingFlow)),
-                  DropdownMenuItem(value: kReadingPages, child: Text(AppStrings.readingPages)),
-                ],
-                onChanged: (v) {
-                  if (v != null) notifier.setReadingMode(v);
-                },
-              ),
-              const SizedBox(height: 16),
               Text(AppStrings.arabicFont, style: _label),
               DropdownButtonFormField<String>(
                 initialValue: s.fontId,
@@ -109,10 +97,6 @@ class SettingsSheet extends ConsumerWidget {
                 onChanged: (v) {
                   if (v != null) notifier.setFont(v);
                 },
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(AppStrings.arabicFontSubtitle, style: _label),
               ),
               const SizedBox(height: 20),
               Text(AppStrings.appColor, style: _label),
@@ -127,21 +111,6 @@ class SettingsSheet extends ConsumerWidget {
                       onTap: () => notifier.setThemePreset(p.id),
                     ),
                 ],
-              ),
-              const SizedBox(height: 12),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                value: s.tajweed,
-                onChanged: notifier.setTajweed,
-                title: const Text(AppStrings.tajweed, style: TextStyle(fontSize: 14)),
-                subtitle: Text(AppStrings.tajweedSubtitle, style: _label),
-              ),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                value: s.ornateFrame,
-                onChanged: notifier.setOrnateFrame,
-                title: const Text(AppStrings.ornateFrame, style: TextStyle(fontSize: 14)),
-                subtitle: Text(AppStrings.ornateFrameSubtitle, style: _label),
               ),
             ],
           ),

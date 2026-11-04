@@ -34,8 +34,6 @@ class SettingsNotifier extends Notifier<AppSettings> {
 
   Future<void> setFont(String id) => _update(state.copyWith(fontId: id));
 
-  Future<void> setReadingMode(String mode) => _update(state.copyWith(readingMode: mode));
-
   Future<void> bumpFontSize(double delta) => _update(state.copyWith(
         mushafFontSize: (state.mushafFontSize + delta)
             .clamp(AppConstants.mushafFontMin, AppConstants.mushafFontMax),

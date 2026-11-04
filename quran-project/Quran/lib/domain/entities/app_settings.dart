@@ -6,7 +6,6 @@ class AppSettings {
     required this.tajweed,
     required this.mushafFontSize,
     required this.fontId,
-    required this.readingMode,
   });
 
   final String reciterId;
@@ -20,9 +19,6 @@ class AppSettings {
   /// Id of the Arabic font used for the text (see font_constants.dart).
   final String fontId;
 
-  /// 'flow' (surah text, font choice applies) or 'pages' (Madinah pages, zoomable).
-  final String readingMode;
-
   AppSettings copyWith({
     String? reciterId,
     String? themePresetId,
@@ -30,7 +26,6 @@ class AppSettings {
     bool? tajweed,
     double? mushafFontSize,
     String? fontId,
-    String? readingMode,
   }) =>
       AppSettings(
         reciterId: reciterId ?? this.reciterId,
@@ -39,6 +34,5 @@ class AppSettings {
         tajweed: tajweed ?? this.tajweed,
         mushafFontSize: mushafFontSize ?? this.mushafFontSize,
         fontId: fontId ?? this.fontId,
-        readingMode: readingMode ?? this.readingMode,
       );
 }

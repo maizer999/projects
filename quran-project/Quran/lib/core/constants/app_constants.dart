@@ -10,12 +10,12 @@ class AppConstants {
   static const int totalJuz = 30;
   static const int totalSurahs = 114;
 
-  // ---- Mushaf font size (ceiling passed to MushafPage.maxFontSize) ----
-  static const double mushafFontMin = 20;
-  static const double mushafFontMax = 68;
-  static const double mushafFontStep = 2;
-  static const double mushafFontDefault = 34;
-
+  // ---- Reading font size (points). Large by default: the app targets
+  // older readers, so the text starts big and grows a lot per tap. ----
+  static const double mushafFontMin = 24;
+  static const double mushafFontMax = 72;
+  static const double mushafFontStep = 4;
+  static const double mushafFontDefault = 36;
 
   // ---- Audio ----
   static const List<double> playbackSpeeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];

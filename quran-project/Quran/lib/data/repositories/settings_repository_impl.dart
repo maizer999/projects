@@ -21,7 +21,6 @@ class SettingsRepositoryImpl implements SettingsRepository {
         mushafFontSize:
             _prefs.getDouble(StorageKeys.mushafFontSize) ?? AppConstants.mushafFontDefault,
         fontId: _prefs.getString(StorageKeys.arabicFont) ?? kDefaultFontId,
-        readingMode: _prefs.getString(StorageKeys.readingMode) ?? kReadingFlow,
       );
 
   @override
@@ -32,7 +31,6 @@ class SettingsRepositoryImpl implements SettingsRepository {
     await _prefs.setBool(StorageKeys.tajweed, s.tajweed);
     await _prefs.setDouble(StorageKeys.mushafFontSize, s.mushafFontSize);
     await _prefs.setString(StorageKeys.arabicFont, s.fontId);
-    await _prefs.setString(StorageKeys.readingMode, s.readingMode);
   }
 
   @override

@@ -19,10 +19,6 @@ class ArabicFontOption {
 
 const String kDefaultFontId = 'kfgqpc';
 
-/// Reading modes: flowing surah text, or the Madinah pages.
-const String kReadingFlow = 'flow';
-const String kReadingPages = 'pages';
-
 const List<ArabicFontOption> arabicFonts = [
   ArabicFontOption(
     id: 'kfgqpc',
