@@ -15,5 +15,6 @@ extension MushafSurahMapper on mt.Surah {
 }
 
 extension MushafAyahMapper on mt.Ayah {
-  Ayah toEntity() => Ayah(id: id, surah: surah, number: number, juz: juz, page: page);
+  Ayah toEntity() =>
+      Ayah(id: id, surah: surah, number: number, juz: juz, page: page, text: text);
 }

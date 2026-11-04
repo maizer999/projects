@@ -29,6 +29,11 @@ class AppStrings {
   static const String settingsTitle = 'إعدادات القراءة';
   static const String reciter = 'القارئ';
   static const String fontSize = 'حجم الخط';
+  static const String arabicFont = 'نوع الخط';
+  static const String arabicFontSubtitle = 'يطبّق على وضع النص المتدفق';
+  static const String readingMode = 'طريقة العرض';
+  static const String readingFlow = 'نص متدفق';
+  static const String readingPages = 'صفحات المصحف';
   static const String appColor = 'لون التطبيق';
   static const String tajweed = 'ألوان التجويد';
   static const String tajweedSubtitle = 'تلوين أحكام التجويد في صفحة المصحف';

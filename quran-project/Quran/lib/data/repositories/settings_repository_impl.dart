@@ -1,4 +1,5 @@
 import '../../core/constants/app_constants.dart';
+import '../../core/constants/font_constants.dart';
 import '../../core/constants/storage_keys.dart';
 import '../../domain/entities/app_settings.dart';
 import '../../domain/entities/reciter.dart';
@@ -19,6 +20,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
         tajweed: _prefs.getBool(StorageKeys.tajweed) ?? false,
         mushafFontSize:
             _prefs.getDouble(StorageKeys.mushafFontSize) ?? AppConstants.mushafFontDefault,
+        fontId: _prefs.getString(StorageKeys.arabicFont) ?? kDefaultFontId,
+        readingMode: _prefs.getString(StorageKeys.readingMode) ?? kReadingFlow,
       );
 
   @override
@@ -28,6 +31,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
     await _prefs.setBool(StorageKeys.ornateFrame, s.ornateFrame);
     await _prefs.setBool(StorageKeys.tajweed, s.tajweed);
     await _prefs.setDouble(StorageKeys.mushafFontSize, s.mushafFontSize);
+    await _prefs.setString(StorageKeys.arabicFont, s.fontId);
+    await _prefs.setString(StorageKeys.readingMode, s.readingMode);
   }
 
   @override

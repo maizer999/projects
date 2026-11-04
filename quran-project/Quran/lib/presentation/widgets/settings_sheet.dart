@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/constants/app_strings.dart';
+import '../../core/constants/font_constants.dart';
 import '../../core/theme/app_colors.dart';
 import '../providers/settings_provider.dart';
 
@@ -84,6 +85,34 @@ class SettingsSheet extends ConsumerWidget {
                     onTap: () => notifier.bumpFontSize(-AppConstants.mushafFontStep),
                   ),
                 ],
+              ),
+              const SizedBox(height: 16),
+              Text(AppStrings.readingMode, style: _label),
+              DropdownButtonFormField<String>(
+                initialValue: s.readingMode,
+                items: const [
+                  DropdownMenuItem(value: kReadingFlow, child: Text(AppStrings.readingFlow)),
+                  DropdownMenuItem(value: kReadingPages, child: Text(AppStrings.readingPages)),
+                ],
+                onChanged: (v) {
+                  if (v != null) notifier.setReadingMode(v);
+                },
+              ),
+              const SizedBox(height: 16),
+              Text(AppStrings.arabicFont, style: _label),
+              DropdownButtonFormField<String>(
+                initialValue: s.fontId,
+                items: [
+                  for (final f in arabicFonts)
+                    DropdownMenuItem(value: f.id, child: Text(f.label)),
+                ],
+                onChanged: (v) {
+                  if (v != null) notifier.setFont(v);
+                },
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(AppStrings.arabicFontSubtitle, style: _label),
               ),
               const SizedBox(height: 20),
               Text(AppStrings.appColor, style: _label),

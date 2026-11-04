@@ -61,6 +61,20 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  # Quran reading fonts (all open-licence, see assets/fonts/licenses).
+  # The KFGQPC Madinah font ships inside the mushaf_text package.
+  fonts:
+    - family: Amiri
+      fonts:
+        - asset: assets/fonts/Amiri-Regular.ttf
+        - asset: assets/fonts/Amiri-Bold.ttf
+          weight: 700
+    - family: ScheherazadeNew
+      fonts:
+        - asset: assets/fonts/ScheherazadeNew-Regular.ttf
+        - asset: assets/fonts/ScheherazadeNew-Bold.ttf
+          weight: 700
+
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

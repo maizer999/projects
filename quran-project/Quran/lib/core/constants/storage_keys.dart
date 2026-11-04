@@ -8,6 +8,8 @@ class StorageKeys {
   static const String ornateFrame = 'ornateFrame';
   static const String tajweed = 'tajweed';
   static const String mushafFontSize = 'mushafMaxFont';
+  static const String arabicFont = 'arabicFont';
+  static const String readingMode = 'readingMode';
   static const String lastPage = 'lastPage';
   static const String lastSurah = 'lastSurah';
 
