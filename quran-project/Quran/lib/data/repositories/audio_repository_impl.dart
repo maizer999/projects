@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 
 import '../../core/constants/api_constants.dart';
+import '../../domain/entities/reciter.dart';
 import '../../domain/repositories/audio_repository.dart';
 import '../datasources/audio_player_data_source.dart';
 
@@ -18,8 +19,8 @@ class AudioRepositoryImpl implements AudioRepository {
   final _status = StreamController<AudioStatus>.broadcast();
   late final List<StreamSubscription<Object?>> _subs;
 
-  static String ayahUrl(String reciterId, int ayahId) =>
-      '${ApiConstants.audioCdnBase}/${ApiConstants.audioBitrate}/$reciterId/$ayahId.${ApiConstants.audioExtension}';
+  static String ayahUrl(Reciter reciter, int ayahId) =>
+      '${ApiConstants.audioCdnBase}/${reciter.bitrate}/${reciter.id}/$ayahId.${ApiConstants.audioExtension}';
 
   AudioStatus _map(PlayerState s) => switch (s) {
         PlayerState.playing => AudioStatus.playing,
@@ -40,11 +41,11 @@ class AudioRepositoryImpl implements AudioRepository {
 
   @override
   Future<void> playAyah({
-    required String reciterId,
+    required Reciter reciter,
     required int ayahId,
     required double speed,
   }) async {
-    await _player.playUrl(ayahUrl(reciterId, ayahId));
+    await _player.playUrl(ayahUrl(reciter, ayahId));
     await _player.setRate(speed);
   }
 

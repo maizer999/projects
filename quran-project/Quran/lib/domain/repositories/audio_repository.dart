@@ -1,3 +1,5 @@
+import '../entities/reciter.dart';
+
 enum AudioStatus { idle, playing, paused, completed }
 
 /// Plays one ayah's recitation at a time.
@@ -6,7 +8,7 @@ abstract interface class AudioRepository {
   Stream<Duration> get position;
   Stream<Duration> get duration;
 
-  Future<void> playAyah({required String reciterId, required int ayahId, required double speed});
+  Future<void> playAyah({required Reciter reciter, required int ayahId, required double speed});
   Future<void> pause();
   Future<void> resume();
   Future<void> stop();

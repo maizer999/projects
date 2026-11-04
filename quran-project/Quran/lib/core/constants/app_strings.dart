@@ -48,6 +48,9 @@ class AppStrings {
   static const String speed = 'السرعة';
   static const String hidePlayer = 'إخفاء المشغّل';
   static String ayahLabel(String n) => 'آية $n';
+  static String ayahProgress(String i, String n) => 'الآية $i من $n';
+  static const String audioLoading = 'جاري تحميل التلاوة…';
+  static const String audioError = 'تعذّر تشغيل التلاوة. تأكد من اتصال الإنترنت وحاول مرة ثانية.';
 
   // ---- Contact ----
   static const String contactUs = 'تواصل معنا';

@@ -22,6 +22,9 @@ class AppConstants {
   static const double defaultPlaybackSpeed = 1.0;
   static const String defaultReciterId = 'ar.alafasy';
 
+  /// Give up on an ayah that hasn't started after this long (slow network).
+  static const Duration audioLoadTimeout = Duration(seconds: 20);
+
   // ---- Theme ----
   static const String defaultThemePresetId = 'green';
 
