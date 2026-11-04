@@ -1,3 +1,4 @@
+import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -5,9 +6,11 @@ import '../../core/constants/app_constants.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/arabic_numerals.dart';
+import '../providers/bookmarks_provider.dart';
 import '../providers/favorites_provider.dart';
 import '../providers/player_provider.dart';
 import '../providers/quran_providers.dart';
+import '../providers/reader_provider.dart';
 import '../providers/settings_provider.dart';
 import '../screens/contact_screen.dart';
 
@@ -25,9 +28,20 @@ class PlayerBar extends ConsumerStatefulWidget {
 
 class _PlayerBarState extends ConsumerState<PlayerBar> {
   bool _expanded = false;
+  int _navIndex = _listenIndex;
+
+  // Fixed order of the curved nav items. Keep "listen" centered so the
+  // raised circle sits over the main play action by default.
+  static const _favIndex = 0;
+  static const _bookmarkIndex = 1;
+  static const _listenIndex = 2;
+  static const _contactIndex = 3;
 
   void _openPlayer() {
-    setState(() => _expanded = true);
+    setState(() {
+      _expanded = true;
+      _navIndex = _listenIndex;
+    });
     if (!ref.read(playerProvider).playing) ref.read(playerProvider.notifier).toggle();
   }
 
@@ -40,16 +54,43 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
     Scaffold.maybeOf(context)?.openEndDrawer();
   }
 
+  Future<void> _toggleBookmark() async {
+    final page = ref.read(readerProvider).page;
+    final wasBookmarked = ref.read(bookmarksProvider).contains(page);
+    await ref.read(bookmarksProvider.notifier).toggle(page);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text(
+          wasBookmarked ? AppStrings.bookmarkRemoved : AppStrings.bookmarkAdded,
+          textDirection: TextDirection.rtl,
+        ),
+        duration: AppConstants.snackBarDuration,
+      ));
+  }
+
+  void _onNavTap(int i) {
+    setState(() => _navIndex = i);
+    switch (i) {
+      case _favIndex:
+        _openFavorites();
+      case _bookmarkIndex:
+        _toggleBookmark();
+      case _listenIndex:
+        _openPlayer();
+      case _contactIndex:
+        _openContact();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.watch(settingsProvider.select((s) => s.themePresetId));
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: AppColors.bg2Dark,
-          border: Border(top: BorderSide(color: AppColors.borderDark)),
-        ),
+      child: Material(
+        color: AppColors.bg2Dark,
         child: SafeArea(
           top: false,
           child: AnimatedSize(
@@ -57,11 +98,17 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
             curve: Curves.easeOut,
             alignment: Alignment.bottomCenter,
             child: _expanded
-                ? _ExpandedPlayer(onCollapse: () => setState(() => _expanded = false))
-                : _CollapsedToolbar(
-                    onListen: _openPlayer,
-                    onContact: _openContact,
-                    onFavorites: _openFavorites,
+                ? DecoratedBox(
+                    decoration: BoxDecoration(
+                      border: Border(top: BorderSide(color: AppColors.borderDark)),
+                    ),
+                    child: _ExpandedPlayer(
+                      onCollapse: () => setState(() => _expanded = false),
+                    ),
+                  )
+                : _CurvedBottomBar(
+                    index: _navIndex,
+                    onTap: _onNavTap,
                   ),
           ),
         ),
@@ -70,47 +117,43 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
   }
 }
 
-class _CollapsedToolbar extends ConsumerWidget {
-  const _CollapsedToolbar({
-    required this.onListen,
-    required this.onContact,
-    required this.onFavorites,
-  });
-  final VoidCallback onListen;
-  final VoidCallback onContact;
-  final VoidCallback onFavorites;
+class _CurvedBottomBar extends ConsumerWidget {
+  const _CurvedBottomBar({required this.index, required this.onTap});
+  final int index;
+  final ValueChanged<int> onTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final playing = ref.watch(playerProvider.select((s) => s.playing));
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-      child: Row(
-        children: [
-          Expanded(
-            child: _ToolbarButton(
-              icon: playing ? Icons.graphic_eq : Icons.play_arrow_rounded,
-              label: playing ? AppStrings.nowPlaying : AppStrings.modeListen,
-              highlighted: true,
-              onTap: onListen,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: _ToolbarButton(
-              icon: Icons.support_agent,
-              label: AppStrings.contactUs,
-              onTap: onContact,
-            ),
-          ),
-          const SizedBox(width: 10),
-          _IconOnlyButton(
-            icon: Icons.star_rounded,
-            tooltip: AppStrings.favorites,
-            onTap: onFavorites,
-          ),
-        ],
-      ),
+    final page = ref.watch(readerProvider.select((s) => s.page));
+    final bookmarked = ref.watch(isBookmarkedProvider(page));
+
+    const iconSize = 26.0;
+    final onBar = Colors.white;
+
+    return CurvedNavigationBar(
+      index: index,
+      height: 65,
+      color: AppColors.accent,
+      buttonBackgroundColor: AppColors.accent2,
+      backgroundColor: AppColors.bg2Dark,
+      animationDuration: const Duration(milliseconds: 350),
+      animationCurve: Curves.easeOutCubic,
+      onTap: onTap,
+      items: [
+        Icon(Icons.star_rounded, size: iconSize, color: onBar),
+        Icon(
+          bookmarked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
+          size: iconSize,
+          color: onBar,
+        ),
+        Icon(
+          playing ? Icons.graphic_eq_rounded : Icons.play_arrow_rounded,
+          size: iconSize + 2,
+          color: onBar,
+        ),
+        Icon(Icons.support_agent_rounded, size: iconSize, color: onBar),
+      ],
     );
   }
 }
@@ -233,89 +276,6 @@ class _ExpandedPlayer extends ConsumerWidget {
             ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ToolbarButton extends StatelessWidget {
-  const _ToolbarButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.highlighted = false,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final bool highlighted;
-
-  @override
-  Widget build(BuildContext context) {
-    final fg = highlighted ? Colors.white : AppColors.textDark;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: onTap,
-        child: Ink(
-          height: 48,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            gradient: highlighted
-                ? LinearGradient(colors: [AppColors.accent, AppColors.accent2])
-                : null,
-            color: highlighted ? null : AppColors.panelDark,
-            border: Border.all(color: AppColors.borderDark),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: fg, size: 22),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: TextStyle(color: fg, fontSize: 14, fontWeight: FontWeight.w600),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _IconOnlyButton extends StatelessWidget {
-  const _IconOnlyButton({
-    required this.icon,
-    required this.tooltip,
-    required this.onTap,
-  });
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: onTap,
-        child: Tooltip(
-          message: tooltip,
-          child: Ink(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              color: AppColors.panelDark,
-              border: Border.all(color: AppColors.borderDark),
-            ),
-            child: Icon(icon, color: AppColors.gold, size: 22),
-          ),
-        ),
       ),
     );
   }

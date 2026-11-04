@@ -17,4 +17,7 @@ class StorageKeys {
 
   /// JSON array of surah numbers the user marked as favourite.
   static const String favoriteSurahs = 'favoriteSurahs';
+
+  /// JSON array of page numbers the user bookmarked (المرجعية).
+  static const String bookmarkedPages = 'bookmarkedPages';
 }

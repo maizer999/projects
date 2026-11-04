@@ -19,8 +19,8 @@ final isFavoriteProvider = Provider.family<bool, int>(
   (ref, surah) => ref.watch(favoritesProvider.select((s) => s.contains(surah))),
 );
 
-/// Which list the drawer is showing — `all` or `favorites`.
-enum PanelTab { all, favorites }
+/// Which list the drawer is showing — all surahs, favourites, or bookmarks.
+enum PanelTab { all, favorites, bookmarks }
 
 final panelTabProvider = NotifierProvider<PanelTabNotifier, PanelTab>(
   PanelTabNotifier.new,

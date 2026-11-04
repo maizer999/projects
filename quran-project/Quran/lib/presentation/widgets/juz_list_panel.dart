@@ -7,6 +7,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/utils/arabic_numerals.dart';
 import '../../domain/entities/juz.dart';
 import '../../domain/entities/surah.dart';
+import '../providers/bookmarks_provider.dart';
 import '../providers/dependency_providers.dart';
 import '../providers/favorites_provider.dart';
 import '../providers/mistakes_provider.dart';
@@ -54,6 +55,9 @@ class _JuzListPanelState extends ConsumerState<JuzListPanel> {
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
             child: SegmentedButton<PanelTab>(
               showSelectedIcon: false,
+              style: const ButtonStyle(
+                visualDensity: VisualDensity.compact,
+              ),
               segments: const [
                 ButtonSegment(
                   value: PanelTab.all,
@@ -64,6 +68,11 @@ class _JuzListPanelState extends ConsumerState<JuzListPanel> {
                   value: PanelTab.favorites,
                   icon: Icon(Icons.star_rounded, size: 16),
                   label: Text(AppStrings.tabFavorites),
+                ),
+                ButtonSegment(
+                  value: PanelTab.bookmarks,
+                  icon: Icon(Icons.bookmark_rounded, size: 16),
+                  label: Text(AppStrings.tabBookmarks),
                 ),
               ],
               selected: {tab},
@@ -96,7 +105,14 @@ class _JuzListPanelState extends ConsumerState<JuzListPanel> {
 
   Widget _body(PanelTab tab) {
     if (_query.trim().isNotEmpty) return _searchResults(tab);
-    return tab == PanelTab.favorites ? _favoritesList() : _juzList();
+    switch (tab) {
+      case PanelTab.favorites:
+        return _favoritesList();
+      case PanelTab.bookmarks:
+        return _bookmarksList();
+      case PanelTab.all:
+        return _juzList();
+    }
   }
 
   Widget _searchResults(PanelTab tab) {
@@ -104,6 +120,11 @@ class _JuzListPanelState extends ConsumerState<JuzListPanel> {
     if (tab == PanelTab.favorites) {
       final favs = ref.watch(favoritesProvider);
       matches = matches.where((s) => favs.contains(s.number)).toList();
+    } else if (tab == PanelTab.bookmarks) {
+      final bookmarks = ref.watch(bookmarksProvider);
+      matches = matches
+          .where((s) => bookmarks.any((p) => p >= s.startPage && p <= s.endPage))
+          .toList();
     }
     if (matches.isEmpty) return const Center(child: Text(AppStrings.noResults));
     return ListView.separated(
@@ -146,6 +167,35 @@ class _JuzListPanelState extends ConsumerState<JuzListPanel> {
       separatorBuilder: (_, _) => const SizedBox(height: 4),
       itemBuilder: (_, i) =>
           _SurahTile(surah: list[i], onTap: () => _open(list[i])),
+    );
+  }
+
+  Widget _bookmarksList() {
+    final bookmarks = ref.watch(bookmarksProvider);
+    if (bookmarks.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(24),
+        child: Center(
+          child: Text(
+            AppStrings.noBookmarks,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppColors.mutedDark, height: 1.6),
+          ),
+        ),
+      );
+    }
+    final pages = bookmarks.toList()..sort();
+    return ListView.separated(
+      padding: const EdgeInsets.all(8),
+      itemCount: pages.length,
+      separatorBuilder: (_, _) => const SizedBox(height: 4),
+      itemBuilder: (_, i) => _BookmarkTile(
+        page: pages[i],
+        onTap: () {
+          ref.read(readerProvider.notifier).openPage(pages[i]);
+          widget.onSurahOpened?.call();
+        },
+      ),
     );
   }
 }
@@ -358,6 +408,94 @@ class _SurahTile extends ConsumerWidget {
                     isFav ? Icons.star_rounded : Icons.star_outline_rounded,
                     size: 20,
                     color: isFav ? AppColors.gold : AppColors.mutedDark,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BookmarkTile extends ConsumerWidget {
+  const _BookmarkTile({required this.page, required this.onTap});
+  final int page;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final info = ref.watch(pageInfoProvider(page));
+    final current = ref.watch(readerProvider.select((r) => r.page)) == page;
+    return Material(
+      color: current
+          ? AppColors.accent.withValues(alpha: 0.18)
+          : AppColors.bg2Dark,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: current ? AppColors.accent2 : AppColors.borderDark,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppColors.bgDark,
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: const Icon(
+                  Icons.bookmark_rounded,
+                  size: 18,
+                  color: AppColors.gold,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppStrings.pageLabel(toArabicDigits(page)),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.gold,
+                      ),
+                    ),
+                    Text(
+                      '${info.surah.nameArabic} · '
+                      '${AppStrings.juzTitle(toArabicDigits(info.juz))}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppColors.mutedDark,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              InkWell(
+                customBorder: const CircleBorder(),
+                onTap: () =>
+                    ref.read(bookmarksProvider.notifier).toggle(page),
+                child: const Padding(
+                  padding: EdgeInsets.all(6),
+                  child: Icon(
+                    Icons.close_rounded,
+                    size: 20,
+                    color: AppColors.gold,
                   ),
                 ),
               ),
