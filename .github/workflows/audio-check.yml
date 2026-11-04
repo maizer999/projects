@@ -1,0 +1,29 @@
+name: tmp audio check
+on:
+  push:
+    branches: [tmp/audio-check]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: CDN info
+        run: |
+          curl -sS https://cdn.islamic.network/quran/info/by-ayah/info.json -o info.json || true
+          echo "=== info.json (first 6000 chars)"; head -c 6000 info.json; echo
+      - name: alquran.cloud audio editions
+        run: |
+          curl -sS "https://api.alquran.cloud/v1/edition?format=audio&type=versebyverse" | python3 -c "import sys,json;[print(e['identifier'],'|',e.get('name'),'|',e.get('language')) for e in json.load(sys.stdin)['data']]"
+      - name: HEAD check each reciter x bitrate (ayah 1, 255, 6236)
+        run: |
+          for r in ar.alafasy ar.husary ar.husarymujawwad ar.minshawi ar.minshawimujawwad ar.abdulbasitmurattal ar.abdulsamad ar.hudhaify ar.saoodshuraym ar.abdurrahmaansudais ar.mahermuaiqly ar.shaatree ar.ahmedajamy ar.hanirifai ar.muhammadayyoub ar.muhammadjibreel ar.abdullahbasfar ar.ibrahimakhbar ar.aymanswoaid ar.parhizgar; do
+            line="$r:"
+            for b in 192 128 64 48 40 32; do
+              codes=""
+              for n in 1 255 6236; do
+                c=$(curl -s -o /dev/null -w '%{http_code}' -I "https://cdn.islamic.network/quran/audio/$b/$r/$n.mp3")
+                codes="$codes$c,"
+              done
+              line="$line $b=[${codes%,}]"
+            done
+            echo "$line"
+          done
