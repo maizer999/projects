@@ -1,0 +1,36 @@
+name: Quran app — analyze and test
+
+# Runs on every branch except main (main has its own build-and-deploy workflow)
+# and on pull requests, so changes are checked before they reach production.
+on:
+  push:
+    branches-ignore: [main]
+    paths:
+      - 'quran-project/Quran/**'
+      - '.github/workflows/quran-ci.yml'
+  pull_request:
+    paths:
+      - 'quran-project/Quran/**'
+  workflow_dispatch: {}
+
+defaults:
+  run:
+    working-directory: quran-project/Quran
+
+jobs:
+  analyze-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - run: flutter pub get
+
+      - run: flutter analyze
+
+      - run: flutter test
+
+      - run: flutter build web --release

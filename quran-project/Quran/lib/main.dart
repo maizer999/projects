@@ -1,44 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:audioplayers/audioplayers.dart';
-import 'services/prefs.dart';
-import 'state/app_state.dart';
-import 'screens/home_screen.dart';
-import 'theme.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'app.dart';
+import 'data/datasources/audio_player_data_source.dart';
+import 'data/datasources/quran_local_data_source.dart';
+import 'data/repositories/quran_repository_impl.dart';
+import 'presentation/providers/dependency_providers.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  AudioPlayer.global.setAudioContext(AudioContext(
-    android: AudioContextAndroid(
-      contentType: AndroidContentType.music,
-      usageType: AndroidUsageType.media,
-      audioFocus: AndroidAudioFocus.gain,
-    ),
-    iOS: AudioContextIOS(
-      category: AVAudioSessionCategory.playback,
-    ),
-  ));
-  final prefs = await Prefs.create();
-  final state = AppState(prefs);
-  state.loadSurahs();
-  runApp(QuranApp(state: state));
-}
 
-class QuranApp extends StatelessWidget {
-  const QuranApp({super.key, required this.state});
-  final AppState state;
+  await AudioPlayerDataSource.configureGlobalContext();
+  final prefs = await SharedPreferences.getInstance();
+  final quran = QuranRepositoryImpl(QuranLocalDataSource());
+  await quran.init(); // bundled Mushaf text, tens of ms
 
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: state,
-      builder: (context, _) => MaterialApp(
-        title: 'Al-Quran',
-        debugShowCheckedModeBanner: false,
-        theme: buildTheme(dark: true),
-        darkTheme: buildTheme(dark: true),
-        themeMode: ThemeMode.dark,
-        home: HomeScreen(state: state),
-      ),
-    );
-  }
+  runApp(
+    ProviderScope(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        quranRepositoryProvider.overrideWithValue(quran),
+      ],
+      child: const QuranApp(),
+    ),
+  );
 }
