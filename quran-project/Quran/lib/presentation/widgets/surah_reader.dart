@@ -99,8 +99,25 @@ class _SurahReaderState extends ConsumerState<SurahReader> {
     // The Basmala in the same encoding as the text (Al-Fatiha, ayah 1).
     final basmala = ref.watch(getSurahAyahsProvider)(1).first.text;
 
-    final spans = <InlineSpan>[];
+    // One text block per mushaf page, each followed by a page-end divider.
+    final pageBlocks = <Widget>[];
+    var spans = <InlineSpan>[];
+    int? currentPage;
+
+    void flushPage() {
+      if (spans.isEmpty) return;
+      pageBlocks.add(Text.rich(
+        TextSpan(children: spans),
+        textAlign: TextAlign.justify,
+        textDirection: TextDirection.rtl,
+      ));
+      pageBlocks.add(_PageDivider(page: currentPage!));
+      spans = <InlineSpan>[];
+    }
+
     for (final a in ayahs) {
+      if (currentPage != null && a.page != currentPage) flushPage();
+      currentPage = a.page;
       final isPlaying = !memorize && playing?.id == a.id;
       final isMistake = memorize && mistakes.contains(a.number);
       final bg = isPlaying
@@ -123,6 +140,7 @@ class _SurahReaderState extends ConsumerState<SurahReader> {
         recognizer: recognizer,
       ));
     }
+    flushPage();
 
     // Surah 1 has the Basmala as its first ayah; surah 9 has none.
     final showBasmala = surah.number != 1 && surah.number != 9;
@@ -143,6 +161,7 @@ class _SurahReaderState extends ConsumerState<SurahReader> {
               border: Border.all(color: AppColors.borderDark),
             ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 if (showBasmala)
                   Padding(
@@ -154,14 +173,55 @@ class _SurahReaderState extends ConsumerState<SurahReader> {
                       style: base.copyWith(color: AppColors.gold, fontSize: size * 1.05),
                     ),
                   ),
-                Text.rich(
-                  TextSpan(children: spans),
-                  textAlign: TextAlign.justify,
-                  textDirection: TextDirection.rtl,
-                ),
+                ...pageBlocks,
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Marks the end of a mushaf page: a line, the page number in a ring, a line.
+class _PageDivider extends StatelessWidget {
+  const _PageDivider({required this.page});
+  final int page;
+
+  @override
+  Widget build(BuildContext context) {
+    final line = Expanded(
+      child: Divider(
+        height: 1,
+        thickness: 1,
+        color: AppColors.ayahMarker.withValues(alpha: 0.45),
+      ),
+    );
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Row(
+        textDirection: TextDirection.rtl,
+        children: [
+          line,
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+            decoration: BoxDecoration(
+              shape: BoxShape.rectangle,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.ayahMarker, width: 1.2),
+            ),
+            child: Text(
+              toArabicDigits(page),
+              textDirection: TextDirection.rtl,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.ayahMarker,
+              ),
+            ),
+          ),
+          line,
         ],
       ),
     );
