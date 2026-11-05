@@ -16,6 +16,9 @@ class AppConstants {
   static const double mushafFontStep = 4;
   static const double mushafFontDefault = 24;
 
+  /// Ayah marker size relative to the verse text (1.0 = same size).
+  static const double ayahMarkerScale = 1.3;
+
   // ---- Audio ----
   static const List<double> playbackSpeeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
   static const double defaultPlaybackSpeed = 1.0;

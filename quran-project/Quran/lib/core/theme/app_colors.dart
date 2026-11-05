@@ -148,6 +148,11 @@ class AppColors {
   static const gold = Color(0xFFC9A646); // ornamental gold (titles, frames)
   static const danger = Color(0xFFEF4444);
 
+  /// End-of-ayah marker (rosette + number) in the reader. A bright aqua that
+  /// stands out from both the off-white verse text and every dark preset;
+  /// the old gold blended into the text.
+  static const ayahMarker = Color(0xFF4DD0E1);
+
   static void applyPreset(ThemePreset preset) {
     accent = preset.accent;
     accent2 = preset.accent2;

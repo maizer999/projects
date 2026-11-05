@@ -92,7 +92,10 @@ class _SurahReaderState extends ConsumerState<SurahReader> {
       height: 2.1,
       color: AppColors.textDark,
     );
-    final markerStyle = base.copyWith(color: AppColors.gold);
+    final markerStyle = base.copyWith(
+      color: AppColors.ayahMarker,
+      fontSize: size * AppConstants.ayahMarkerScale,
+    );
     // The Basmala in the same encoding as the text (Al-Fatiha, ayah 1).
     final basmala = ref.watch(getSurahAyahsProvider)(1).first.text;
 
