@@ -3,13 +3,13 @@
 class ContactConstants {
   ContactConstants._();
 
-  static const String email = 'support@example.com';
+  static const String email = 'maizer99@gmail.com';
 
   /// International format, used for dialing and display.
-  static const String phone = '+962790000000';
+  static const String phone = '+962798286811';
 
   /// International format without "+" or spaces (wa.me format).
-  static const String whatsapp = '962790000000';
+  static const String whatsapp = '962798286811';
 
   static const String emailSubject = 'تطبيق القرآن - رسالة دعم';
 }

@@ -29,11 +29,15 @@ class JuzListPanel extends ConsumerStatefulWidget {
 
 class _JuzListPanelState extends ConsumerState<JuzListPanel> {
   final _search = TextEditingController();
+  final _scrollCtrl = ScrollController();
+  final Map<int, GlobalKey> _juzKeys = {};
   String _query = '';
+  bool _didScrollToCurrent = false;
 
   @override
   void dispose() {
     _search.dispose();
+    _scrollCtrl.dispose();
     super.dispose();
   }
 
@@ -138,11 +142,53 @@ class _JuzListPanelState extends ConsumerState<JuzListPanel> {
 
   Widget _juzList() {
     final juzs = ref.watch(juzIndexProvider);
+    final currentSurah = ref.watch(readerProvider.select((r) => r.surahNumber));
+    if (!_didScrollToCurrent) {
+      _didScrollToCurrent = true;
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _scrollToCurrentJuz(juzs, currentSurah),
+      );
+    }
     return ListView.builder(
+      controller: _scrollCtrl,
       padding: const EdgeInsets.all(8),
       itemCount: juzs.length,
-      itemBuilder: (_, i) => _JuzTile(juz: juzs[i], onOpen: _open),
+      itemBuilder: (_, i) {
+        final juz = juzs[i];
+        final isCurrent = juz.surahs.any((s) => s.number == currentSurah);
+        final key = _juzKeys.putIfAbsent(juz.number, () => GlobalKey());
+        return KeyedSubtree(
+          key: key,
+          child: _JuzTile(juz: juz, onOpen: _open, isCurrent: isCurrent),
+        );
+      },
     );
+  }
+
+  void _scrollToCurrentJuz(List<Juz> juzs, int currentSurah) {
+    if (!mounted || !_scrollCtrl.hasClients) return;
+    var idx = -1;
+    for (var i = 0; i < juzs.length; i++) {
+      if (juzs[i].surahs.any((s) => s.number == currentSurah)) {
+        idx = i;
+        break;
+      }
+    }
+    if (idx <= 0) return;
+    const approxTileHeight = 72.0;
+    final target = (idx * approxTileHeight)
+        .clamp(0.0, _scrollCtrl.position.maxScrollExtent);
+    _scrollCtrl.jumpTo(target);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = _juzKeys[juzs[idx].number]?.currentContext;
+      if (ctx != null) {
+        Scrollable.ensureVisible(
+          ctx,
+          alignment: 0.05,
+          duration: const Duration(milliseconds: 250),
+        );
+      }
+    });
   }
 
   Widget _favoritesList() {
@@ -248,13 +294,39 @@ class _Header extends StatelessWidget {
   );
 }
 
-class _JuzTile extends StatelessWidget {
-  const _JuzTile({required this.juz, required this.onOpen});
+class _JuzTile extends StatefulWidget {
+  const _JuzTile({
+    required this.juz,
+    required this.onOpen,
+    required this.isCurrent,
+  });
   final Juz juz;
   final void Function(Surah) onOpen;
+  final bool isCurrent;
+
+  @override
+  State<_JuzTile> createState() => _JuzTileState();
+}
+
+class _JuzTileState extends State<_JuzTile> {
+  final _expansion = ExpansibleController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.isCurrent) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        try {
+          if (!_expansion.isExpanded) _expansion.expand();
+        } catch (_) {}
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final juz = widget.juz;
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
       decoration: BoxDecoration(
@@ -268,6 +340,8 @@ class _JuzTile extends StatelessWidget {
           data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
           child: ExpansionTile(
             key: PageStorageKey('juz_${juz.number}'),
+            controller: _expansion,
+            initiallyExpanded: widget.isCurrent,
             tilePadding: const EdgeInsets.symmetric(horizontal: 12),
             leading: Container(
               width: 32,
@@ -301,7 +375,7 @@ class _JuzTile extends StatelessWidget {
               for (final s in juz.surahs)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4),
-                  child: _SurahTile(surah: s, onTap: () => onOpen(s)),
+                  child: _SurahTile(surah: s, onTap: () => widget.onOpen(s)),
                 ),
             ],
           ),
