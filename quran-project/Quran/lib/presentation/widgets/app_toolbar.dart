@@ -4,10 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/arabic_numerals.dart';
+import '../providers/favorites_provider.dart';
 import '../providers/mistakes_provider.dart';
 import '../providers/quran_providers.dart';
 import '../providers/reader_provider.dart';
-import 'settings_sheet.dart';
 
 class AppToolbar extends ConsumerWidget {
   const AppToolbar({super.key, this.onOpenDrawer});
@@ -20,6 +20,7 @@ class AppToolbar extends ConsumerWidget {
     final surah = ref.watch(surahsProvider)[reader.surahNumber - 1];
     final mistakes = ref.watch(mistakeCountProvider(reader.surahNumber));
     final memorize = reader.mode == ReaderMode.memorize;
+    final isFav = ref.watch(isFavoriteProvider(reader.surahNumber));
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -65,9 +66,13 @@ class AppToolbar extends ConsumerWidget {
                     ),
                   ),
                 IconButton(
-                  tooltip: AppStrings.settingsTitle,
-                  icon: const Icon(Icons.tune),
-                  onPressed: () => showSettingsSheet(context),
+                  tooltip: AppStrings.tabFavorites,
+                  icon: Icon(
+                    isFav ? Icons.star_rounded : Icons.star_outline_rounded,
+                    color: isFav ? AppColors.gold : AppColors.mutedDark,
+                  ),
+                  onPressed: () =>
+                      ref.read(favoritesProvider.notifier).toggle(reader.surahNumber),
                 ),
                 if (onOpenDrawer != null)
                   IconButton(icon: const Icon(Icons.menu), onPressed: onOpenDrawer),

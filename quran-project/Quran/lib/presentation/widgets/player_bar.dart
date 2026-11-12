@@ -7,15 +7,14 @@ import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/arabic_numerals.dart';
 import '../providers/bookmarks_provider.dart';
-import '../providers/favorites_provider.dart';
 import '../providers/player_provider.dart';
 import '../providers/quran_providers.dart';
 import '../providers/reader_provider.dart';
 import '../providers/settings_provider.dart';
-import '../screens/contact_screen.dart';
+import '../screens/settings_screen.dart';
 
 /// Bottom bar with two states:
-/// - collapsed (default): a toolbar with "استماع" and "تواصل معنا".
+/// - collapsed (default): a toolbar with "استماع" and settings/bookmark.
 /// - expanded: tapping "استماع" starts recitation and shows the full player
 ///   (play/pause, stop, previous/next, speed, progress). The ⌄ button goes
 ///   back to the toolbar; audio keeps playing.
@@ -30,12 +29,9 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
   bool _expanded = false;
   int _navIndex = _listenIndex;
 
-  // Fixed order of the curved nav items. Keep "listen" centered so the
-  // raised circle sits over the main play action by default.
-  static const _favIndex = 0;
+  static const _settingsIndex = 0;
   static const _bookmarkIndex = 1;
   static const _listenIndex = 2;
-  static const _contactIndex = 3;
 
   void _openPlayer() {
     setState(() {
@@ -44,15 +40,6 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
     });
     final s = ref.read(playerProvider);
     if (!s.playing && !s.loading) ref.read(playerProvider.notifier).toggle();
-  }
-
-  void _openContact() => Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => const ContactScreen()),
-      );
-
-  void _openFavorites() {
-    ref.read(panelTabProvider.notifier).set(PanelTab.favorites);
-    Scaffold.maybeOf(context)?.openEndDrawer();
   }
 
   Future<void> _toggleBookmark() async {
@@ -74,14 +61,14 @@ class _PlayerBarState extends ConsumerState<PlayerBar> {
   void _onNavTap(int i) {
     setState(() => _navIndex = i);
     switch (i) {
-      case _favIndex:
-        _openFavorites();
+      case _settingsIndex:
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
+        );
       case _bookmarkIndex:
         _toggleBookmark();
       case _listenIndex:
         _openPlayer();
-      case _contactIndex:
-        _openContact();
     }
   }
 
@@ -156,7 +143,7 @@ class _CurvedBottomBar extends ConsumerWidget {
       animationCurve: Curves.easeOutCubic,
       onTap: onTap,
       items: [
-        Icon(Icons.star_rounded, size: iconSize, color: onBar),
+        Icon(Icons.settings_rounded, size: iconSize, color: onBar),
         Icon(
           bookmarked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
           size: iconSize,
@@ -173,7 +160,6 @@ class _CurvedBottomBar extends ConsumerWidget {
                 size: iconSize + 2,
                 color: onBar,
               ),
-        Icon(Icons.support_agent_rounded, size: iconSize, color: onBar),
       ],
     );
   }
