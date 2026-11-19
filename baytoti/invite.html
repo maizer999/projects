@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>دعوة للانضمام — بيتي</title>
+  <meta name="description" content="انضم إلى قائمة بيتي باستخدام رمز الدعوة">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Cairo', 'Tajawal', sans-serif;
+      background: #f8f6f2;
+      color: #2e2b28;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+    }
+    .card {
+      width: 100%;
+      max-width: 460px;
+      background: #fffcf9;
+      border-radius: 2rem;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06), 0 4px 12px rgba(0, 0, 0, 0.03);
+      padding: 2.25rem 1.75rem 2rem;
+      border: 1px solid #f0e8e0;
+      text-align: center;
+    }
+    .emoji { font-size: 3.5rem; margin-bottom: 0.5rem; }
+    h1 {
+      font-size: 1.75rem;
+      color: #2d5a4b;
+      margin-bottom: 0.4rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+    .sub {
+      color: #7a6e64;
+      font-size: 1rem;
+      line-height: 1.7;
+      margin-bottom: 1.5rem;
+    }
+    .code-wrap {
+      background: #f5f0eb;
+      border: 2px dashed #b8a99a;
+      border-radius: 1.25rem;
+      padding: 1rem 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+    .code-label {
+      font-size: 0.85rem;
+      color: #7a6e64;
+      margin-bottom: 0.4rem;
+    }
+    #code {
+      font-family: 'Cairo', monospace;
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #2d5a4b;
+      letter-spacing: 0.4rem;
+      direction: ltr;
+      padding-inline-start: 0.4rem;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.95rem 1.25rem;
+      border-radius: 60px;
+      font-family: 'Cairo', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.2s, background 0.2s;
+      margin-bottom: 0.65rem;
+    }
+    .btn-primary {
+      background: #2d5a4b;
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(45, 90, 75, 0.25);
+    }
+    .btn-primary:hover { background: #1f4236; transform: translateY(-1px); }
+    .btn-ghost {
+      background: #fff;
+      color: #2d5a4b;
+      border: 1.5px solid #e4d9ce;
+    }
+    .btn-ghost:hover { background: #faf6f1; }
+    .how {
+      text-align: start;
+      background: #faf6f1;
+      border-radius: 1rem;
+      padding: 1rem 1.1rem;
+      margin-top: 1rem;
+      font-size: 0.92rem;
+      color: #5a5047;
+      line-height: 1.8;
+    }
+    .how b { color: #2d5a4b; font-weight: 700; }
+    ol { padding-inline-start: 1.25rem; margin-top: 0.4rem; }
+    ol li { margin-bottom: 0.25rem; }
+    .no-code {
+      color: #c25450;
+      font-weight: 700;
+    }
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(2rem);
+      background: #2d5a4b;
+      color: #fff;
+      padding: 0.6rem 1.2rem;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .footer {
+      margin-top: 1.1rem;
+      font-size: 0.78rem;
+      color: #a69789;
+    }
+    .footer a { color: #2d5a4b; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="emoji">🏠</div>
+    <h1>دعوة إلى قائمة بيتي</h1>
+    <p class="sub">استخدم الرمز أدناه للانضمام إلى القائمة من تطبيق <b>بيتي</b> على هاتفك.</p>
+
+    <div class="code-wrap">
+      <div class="code-label">رمز الدعوة</div>
+      <div id="code">——————</div>
+    </div>
+
+    <button class="btn btn-primary" id="copyBtn" type="button">
+      <span>📋</span><span>نسخ الرمز</span>
+    </button>
+    <button class="btn btn-ghost" id="openBtn" type="button">
+      <span>📱</span><span>افتح تطبيق بيتي</span>
+    </button>
+
+    <div class="how">
+      <b>كيف تنضم؟</b>
+      <ol>
+        <li>افتح تطبيق <b>بيتي</b> على هاتفك.</li>
+        <li>اضغط «لديك رمز دعوة؟».</li>
+        <li>الصق الرمز أعلاه واضغط «انضمام».</li>
+      </ol>
+    </div>
+
+    <div class="footer">
+      ليس لديك التطبيق؟ تواصل مع من دعاك للحصول عليه.
+    </div>
+  </main>
+
+  <div class="toast" id="toast">تم نسخ الرمز</div>
+
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const raw = (params.get('code') || '').trim().toUpperCase();
+      const codeEl = document.getElementById('code');
+      const copyBtn = document.getElementById('copyBtn');
+      const openBtn = document.getElementById('openBtn');
+      const toast = document.getElementById('toast');
+
+      if (!raw) {
+        codeEl.textContent = 'لا يوجد رمز';
+        codeEl.classList.add('no-code');
+        copyBtn.disabled = true;
+        copyBtn.style.opacity = '0.5';
+        copyBtn.style.cursor = 'not-allowed';
+      } else {
+        codeEl.textContent = raw;
+      }
+
+      function showToast(msg) {
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 1800);
+      }
+
+      copyBtn.addEventListener('click', async () => {
+        if (!raw) return;
+        try {
+          await navigator.clipboard.writeText(raw);
+          showToast('تم نسخ الرمز');
+        } catch (_) {
+          const ta = document.createElement('textarea');
+          ta.value = raw;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          showToast('تم نسخ الرمز');
+        }
+      });
+
+      openBtn.addEventListener('click', () => {
+        if (raw) {
+          window.location.href = 'bayti://join?code=' + encodeURIComponent(raw);
+          setTimeout(() => showToast('إن لم يفتح التطبيق، الصق الرمز يدوياً'), 900);
+        } else {
+          showToast('لا يوجد رمز في الرابط');
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
