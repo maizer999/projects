@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../ui/name_prompt.dart';
 import 'models.dart';
@@ -12,10 +11,7 @@ import 'models.dart';
 ///
 /// Realtime is simulated by polling (every [_pollInterval]) plus a per-list
 /// "poke" stream that each mutation fires to force an immediate refresh on
-/// any active watcher.
-///
-/// Wishlist is intentionally local-only (SharedPreferences) — same model as
-/// the web version.
+/// any active watcher. Both purchases and wishes sync across devices.
 class ListRepository {
   ListRepository({
     http.Client? client,
@@ -29,23 +25,22 @@ class ListRepository {
 
   // Mutation poke bus — one per listId.
   final Map<String, StreamController<void>> _pokes = {};
-  // Local wishlist broadcast — one per listId.
-  final Map<String, StreamController<List<WishItem>>> _wishBroadcasts = {};
 
   StreamController<void> _pokeFor(String listId) => _pokes.putIfAbsent(
         listId,
         () => StreamController<void>.broadcast(),
       );
 
-  StreamController<List<WishItem>> _wishBroadcastFor(String listId) =>
-      _wishBroadcasts.putIfAbsent(
-        listId,
-        () => StreamController<List<WishItem>>.broadcast(),
-      );
-
   void _poke(String listId) {
     final c = _pokes[listId];
     if (c != null && !c.isClosed) c.add(null);
+  }
+
+  /// Fires an immediate refresh on all active watchers for [listId] and
+  /// resolves once the typical round-trip has settled. Used by pull-to-refresh.
+  Future<void> refresh(String listId) async {
+    _poke(listId);
+    await Future<void>.delayed(const Duration(milliseconds: 600));
   }
 
   static String generateId([int length = 10]) {
@@ -261,64 +256,25 @@ class ListRepository {
     _poke(listId);
   }
 
-  // ─── Wishlist (local, SharedPreferences) ──────────────────────────────────
+  // ─── Wishlist (server-synced) ─────────────────────────────────────────────
 
-  String _wishKey(String listId) => 'bayti_wishlist_$listId';
-
-  Future<List<WishItem>> _loadWish(String listId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_wishKey(listId));
-    if (raw == null || raw.isEmpty) return [];
-    try {
-      final arr = jsonDecode(raw) as List<dynamic>;
+  Stream<List<WishItem>> watchWishlist(String listId) {
+    return _poll(listId, () async {
+      final arr = await _getArray('/lists/$listId/wishes');
       return arr
           .map((e) => WishItem.fromJson(e as Map<String, dynamic>))
           .toList();
-    } catch (_) {
-      return [];
-    }
-  }
-
-  Future<void> _saveWish(String listId, List<WishItem> items) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      _wishKey(listId),
-      jsonEncode(items.map((e) => e.toJson()).toList()),
-    );
-    final b = _wishBroadcasts[listId];
-    if (b != null && !b.isClosed) b.add(items);
-  }
-
-  Stream<List<WishItem>> watchWishlist(String listId) {
-    late StreamController<List<WishItem>> out;
-    StreamSubscription<List<WishItem>>? sub;
-    out = StreamController<List<WishItem>>(
-      onListen: () async {
-        try {
-          out.add(await _loadWish(listId));
-        } catch (e, s) {
-          if (!out.isClosed) out.addError(e, s);
-        }
-        sub = _wishBroadcastFor(listId).stream.listen((v) {
-          if (!out.isClosed) out.add(v);
-        });
-      },
-      onCancel: () async => sub?.cancel(),
-    );
-    return out.stream;
+    });
   }
 
   Future<void> addWish(String listId, WishItem w) async {
-    final items = await _loadWish(listId);
-    items.removeWhere((e) => e.id == w.id);
-    items.insert(0, w);
-    await _saveWish(listId, items);
+    await _post('/lists/$listId/wishes', w.toJson());
+    _poke(listId);
   }
 
   Future<void> deleteWish(String listId, String id) async {
-    final items = await _loadWish(listId);
-    items.removeWhere((e) => e.id == id);
-    await _saveWish(listId, items);
+    await _delete('/lists/$listId/wishes/$id');
+    _poke(listId);
   }
 }
 

@@ -203,6 +203,43 @@ If all four return clean JSON, the backend is done.
 
 ---
 
+## 7½ · Migrations (apply after schema changes)
+
+When new `backend/migrations/NNN_*.sql` files are added, deploy them like so.
+
+**From your Mac:**
+
+```bash
+scp -i ~/Downloads/ssh-key-2026-11-11.key \
+  "projects/baytoti-flutter/backend/index.php" \
+  "projects/baytoti-flutter/backend/migrations/"*.sql \
+  ubuntu@<PUBLIC_IP>:/tmp/
+```
+
+**On the VM — apply pending migrations, then refresh the API:**
+
+```bash
+# Apply any migration files uploaded to /tmp (idempotent — uses CREATE TABLE IF NOT EXISTS):
+for f in /tmp/[0-9][0-9][0-9]_*.sql; do
+  echo "→ $f"
+  sudo mariadb baytoti < "$f"
+done
+rm -f /tmp/[0-9][0-9][0-9]_*.sql
+
+sudo mv /tmp/index.php /var/www/baytoti-api/index.php
+sudo chown www-data:www-data /var/www/baytoti-api/index.php
+
+# Smoke-check the new endpoint (replace LIST_ID):
+curl -s https://api.mazier.website/lists/<LIST_ID>/wishes
+# → []   (empty array for a fresh list)
+```
+
+Migrations currently in this folder:
+
+- `001_wishes.sql` — adds `wishes` table so النواقص sync across members.
+
+---
+
 ## 8 · Where logs live
 
 ```bash

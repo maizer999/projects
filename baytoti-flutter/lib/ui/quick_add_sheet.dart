@@ -49,30 +49,49 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
     return Padding(
       padding: EdgeInsets.only(bottom: bottomInset),
       child: Container(
-        padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
         decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          color: BaytiColors.card,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: BaytiColors.muted.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
+            Center(
+              child: Container(
+                width: 44,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 18),
+                decoration: BoxDecoration(
+                  color: BaytiColors.line,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
-            Text('إضافة سريعة',
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: BaytiColors.primaryDark)),
-            const SizedBox(height: 16),
+            Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: context.bPrimarySoft,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.bolt_rounded,
+                      size: 20, color: context.bPrimaryDark),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'إضافة سريعة',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: context.bPrimaryDark,
+                        fontSize: 18,
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
             ProductAutocomplete(
               controller: _nameCtrl,
               onSelected: (p) {
@@ -91,13 +110,16 @@ class _QuickAddSheetState extends State<QuickAddSheet> {
               controller: _priceCtrl,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(labelText: 'السعر (د.أ)'),
+              decoration: const InputDecoration(
+                labelText: 'السعر (د.أ)',
+                prefixIcon: Icon(Icons.payments_outlined, size: 20),
+              ),
               onSubmitted: (_) => _save(),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 18),
             FilledButton.icon(
               onPressed: _save,
-              icon: const Icon(Icons.check),
+              icon: const Icon(Icons.check_rounded),
               label: const Text('حفظ'),
             ),
           ],

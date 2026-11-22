@@ -75,6 +75,21 @@ GET /lists/{id}/stats?limit=10
 → 200 [{"id": "...", "name": "خبز", "count": 12, "lastUsed": "..."}]
 ```
 
+### Wishes (النواقص — shared across list members)
+```
+GET /lists/{id}/wishes
+→ 200 [{"id": "...", "itemName": "خبز", "addedByName": "محمد",
+         "createdAt": "2026-11-22T10:00:00Z"}]
+
+POST /lists/{id}/wishes
+body: {"id": "<optional>", "itemName": "خبز", "addedByName": "محمد",
+       "createdAt": "<optional ISO>"}
+→ 201 the inserted wish (idempotent on id — re-posts upsert)
+
+DELETE /lists/{id}/wishes/{wishId}
+→ 204
+```
+
 ## Errors
 ```
 400 {"error": "bad_request", "message": "..."}
@@ -84,6 +99,5 @@ GET /lists/{id}/stats?limit=10
 
 ## Notes
 - Categories: `food | cleaning | other`.
-- Wishlist is **not** synced — kept in `shared_preferences` only (matches web).
-- IDs: client generates (10-char alphanumeric for lists, 20-char for purchases).
+- IDs: client generates (10-char alphanumeric for lists, 20-char for purchases/wishes).
 - `inviteCode`: 6 chars from `ABCDEFGHJKLMNPQRSTUVWXYZ23456789` (no look-alikes).

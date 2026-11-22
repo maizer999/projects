@@ -54,20 +54,33 @@ class _PricePromptDialogState extends State<_PricePromptDialog> {
       title: Row(
         children: [
           Container(
-            width: 36,
-            height: 36,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
-              color: BaytiColors.primarySoft,
-              borderRadius: BorderRadius.circular(10),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [context.bPrimary, context.bPrimaryDark],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: context.bPrimary.withValues(alpha: 0.25),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            child: Icon(Icons.shopping_cart_checkout,
-                size: 20, color: BaytiColors.primaryDark),
+            child: const Icon(Icons.shopping_cart_checkout_rounded,
+                size: 20, color: Colors.white),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               'شراء "${widget.itemName}"',
-              style: Theme.of(context).textTheme.titleMedium,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: context.bPrimaryDark,
+                  ),
               overflow: TextOverflow.ellipsis,
             ),
           ),

@@ -143,6 +143,18 @@ try {
         $method === 'GET' && count($seg) === 3 && $seg[0] === 'lists' && $seg[2] === 'stats'
             => listStats($seg[1], (int)($_GET['limit'] ?? 10)),
 
+        // GET /lists/{id}/wishes
+        $method === 'GET' && count($seg) === 3 && $seg[0] === 'lists' && $seg[2] === 'wishes'
+            => listWishes($seg[1]),
+
+        // POST /lists/{id}/wishes
+        $method === 'POST' && count($seg) === 3 && $seg[0] === 'lists' && $seg[2] === 'wishes'
+            => addWish($seg[1], body()),
+
+        // DELETE /lists/{id}/wishes/{wishId}
+        $method === 'DELETE' && count($seg) === 4 && $seg[0] === 'lists' && $seg[2] === 'wishes'
+            => deleteWish($seg[1], $seg[3]),
+
         default => notFound(),
     };
 } catch (PDOException $e) {
@@ -310,6 +322,58 @@ function archiveOlder(string $listId, array $b): void {
     );
     $stmt->execute([gmdate('Y-m-d H:i:s'), $listId, $cutoff]);
     send(200, ['archived' => $stmt->rowCount()]);
+}
+
+function listWishes(string $listId): void {
+    if (!listExists($listId)) notFound();
+    $stmt = db()->prepare(
+        'SELECT * FROM wishes WHERE list_id = ? ORDER BY created_at DESC'
+    );
+    $stmt->execute([$listId]);
+    send(200, array_map('wishRow', $stmt->fetchAll()));
+}
+
+function addWish(string $listId, array $b): void {
+    if (!listExists($listId)) notFound();
+    $itemId = (string)($b['id'] ?? genId(20));
+    $name   = trim((string)($b['itemName'] ?? ''));
+    if ($name === '') bad('itemName required');
+
+    db()->prepare(
+        'INSERT INTO wishes (id, list_id, item_name, added_by_name, created_at)
+         VALUES (?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE
+            item_name     = VALUES(item_name),
+            added_by_name = VALUES(added_by_name),
+            created_at    = VALUES(created_at)'
+    )->execute([
+        $itemId,
+        $listId,
+        $name,
+        (string)($b['addedByName'] ?? 'ضيف'),
+        fromIso($b['createdAt'] ?? null),
+    ]);
+
+    $stmt = db()->prepare('SELECT * FROM wishes WHERE id = ?');
+    $stmt->execute([$itemId]);
+    $row = $stmt->fetch();
+    if (!$row) notFound();
+    send(201, wishRow($row));
+}
+
+function deleteWish(string $listId, string $wishId): void {
+    $stmt = db()->prepare('DELETE FROM wishes WHERE list_id = ? AND id = ?');
+    $stmt->execute([$listId, $wishId]);
+    send(204);
+}
+
+function wishRow(array $r): array {
+    return [
+        'id'          => $r['id'],
+        'itemName'    => $r['item_name'],
+        'addedByName' => $r['added_by_name'],
+        'createdAt'   => iso($r['created_at']),
+    ];
 }
 
 function listStats(string $id, int $limit): void {

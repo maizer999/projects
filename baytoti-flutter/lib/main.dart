@@ -3,7 +3,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'data/repository.dart';
 import 'data/theme_settings.dart';
-import 'ui/glass.dart';
 import 'ui/landing_screen.dart';
 import 'ui/theme.dart';
 
@@ -32,6 +31,10 @@ class BaytiApp extends StatefulWidget {
 
 class _BaytiAppState extends State<BaytiApp> implements BaytiAppController {
   late String _presetId = widget.initialPresetId;
+  // One repository for the whole app — do NOT recreate on rebuild, otherwise
+  // every theme change spawns fresh poll streams and _poke notifications
+  // never reach watchers attached to a previous instance.
+  final ListRepository _repo = ListRepository();
 
   @override
   String get presetId => _presetId;
@@ -47,7 +50,6 @@ class _BaytiAppState extends State<BaytiApp> implements BaytiAppController {
 
   @override
   Widget build(BuildContext context) {
-    final repo = ListRepository();
     return MaterialApp(
       title: 'بيتي',
       debugShowCheckedModeBanner: false,
@@ -61,9 +63,12 @@ class _BaytiAppState extends State<BaytiApp> implements BaytiAppController {
       ],
       builder: (context, child) => Directionality(
         textDirection: TextDirection.rtl,
-        child: GlassBackground(child: child ?? const SizedBox()),
+        child: ColoredBox(
+          color: BaytiColors.bg,
+          child: child ?? const SizedBox(),
+        ),
       ),
-      home: LandingScreen(repo: repo),
+      home: LandingScreen(repo: _repo),
     );
   }
 }

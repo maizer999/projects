@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>$ Baytoti · WhatsApp OTP Auth Plan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Noto+Kufi+Arabic:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../assets/terminal-theme.css" />
+  <style>
+    .diagram {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      margin: 10px 0 22px;
+      overflow-x: auto;
+      white-space: pre;
+      color: var(--green-bright);
+      font-size: 12.5px;
+      line-height: 1.6;
+      direction: ltr;
+      text-align: left;
+    }
+    .two-col {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 10px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+    }
+    .card h3 {
+      margin: 0 0 8px;
+      color: var(--green-bright);
+      font-size: 13.5px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .card p { margin: 0; color: var(--ink); font-size: 13px; line-height: 1.6; }
+    .card .meta { color: var(--muted); font-size: 11.5px; margin-top: 6px; }
+    code.inline { color: var(--green); background: rgba(74,222,128,0.08); padding: 1px 6px; border-radius: 4px; border: 1px solid var(--line); font-size: 12px; }
+    .table-wrap { overflow-x: auto; margin: 10px 0 22px; }
+    table.t {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    table.t th,
+    table.t td {
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: start;
+      vertical-align: top;
+      color: var(--ink);
+    }
+    table.t th {
+      background: var(--bg-2);
+      color: var(--green-bright);
+      font-weight: 600;
+      font-size: 12px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    table.t tr:last-child td { border-bottom: 0; }
+    table.t code { color: var(--green); background: rgba(74,222,128,0.08); padding: 1px 6px; border-radius: 4px; border: 1px solid var(--line); font-size: 11.5px; }
+    .callout {
+      border: 1px solid var(--line-2);
+      background: rgba(74,222,128,0.04);
+      border-right: 3px solid var(--green);
+      padding: 12px 14px;
+      border-radius: var(--radius);
+      margin: 10px 0 22px;
+      color: var(--ink);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .callout.warn {
+      background: rgba(245,158,11,0.05);
+      border-right-color: var(--warn);
+    }
+    .callout b { color: var(--green-bright); }
+    pre.code {
+      background: var(--bg-2);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      overflow-x: auto;
+      font-size: 12.5px;
+      color: var(--ink);
+      direction: ltr;
+      text-align: left;
+      margin: 10px 0 22px;
+    }
+    pre.code .k { color: var(--green-bright); font-weight: 600; }
+    pre.code .c { color: var(--muted); font-style: italic; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+    <header class="topbar">
+      <div>
+        <h1 class="prompt-title">Baytoti · WhatsApp OTP Auth Plan</h1>
+        <p class="prompt-sub">
+          التطبيق: <code class="inline">بيتي Flutter</code> &nbsp;·&nbsp;
+          السيرفر: <code class="inline">mazier.website</code> &nbsp;·&nbsp;
+          التكلفة: <code class="inline">$0</code> &nbsp;·&nbsp;
+          الـ Transport: <code class="inline">Baileys (WhatsApp Web)</code>
+        </p>
+      </div>
+      <div class="actions">
+        <a class="t-btn" href="AUTH_PLAN.md">AUTH_PLAN.md ↗</a>
+        <a class="t-btn" href="https://github.com/WhiskeySockets/Baileys" target="_blank" rel="noopener">Baileys ↗</a>
+      </div>
+    </header>
+
+    <!-- Filter tabs -->
+    <div class="pill-row" role="tablist" aria-label="Sections">
+      <a class="pill is-active" href="#why">لماذا</a>
+      <a class="pill" href="#arch">المعمارية</a>
+      <a class="pill" href="#schema">Schema</a>
+      <a class="pill" href="#baileys">Baileys</a>
+      <a class="pill" href="#php">PHP Endpoints</a>
+      <a class="pill" href="#flutter">Flutter</a>
+      <a class="pill" href="#steps">خطوات التنفيذ</a>
+    </div>
+
+    <!-- ── Why ──────────────────────────────────────────────── -->
+    <h2 id="why" class="md-h">WHY <span class="hint">— مقارنة الحلول</span></h2>
+
+    <div class="two-col">
+      <div class="card">
+        <h3>Baileys (مختارنا)</h3>
+        <p>مكتبة واتس اب غير رسمية، تشغّل جلسة WhatsApp Web على سيرفرك.</p>
+        <div class="meta">✓ مجاني بالكامل · ✓ نشر فوري · ⚠ خطر حظر الرقم عند الحجم الكبير</div>
+      </div>
+      <div class="card">
+        <h3>Firebase Phone Auth</h3>
+        <p>SMS مجاني حتى 10K/شهر — بس <b>SMS مش واتس اب</b>.</p>
+        <div class="meta">✓ أبسط إعداد · ✗ ليس واتس اب كما طلب العميل</div>
+      </div>
+      <div class="card">
+        <h3>WhatsApp Cloud API (Meta)</h3>
+        <p>الرسمي من Meta — 1000 محادثة مجانية/شهر.</p>
+        <div class="meta">✓ آمن قانونيًا · ✗ يحتاج Business verification + مدفوعات</div>
+      </div>
+    </div>
+
+    <div class="callout warn">
+      <b>المخاطر على Baileys:</b> واتس اب قد يحظر الرقم عند النشاط الكثيف أو
+      اعتباره بوت. الحل: استخدم رقم SIM مخصص (ليس شخصي)، حدّد معدل الإرسال،
+      وخطّط للهجرة إلى <code class="inline">Cloud API</code> عند تجاوز ~500 يوزر.
+    </div>
+
+    <!-- ── Architecture ─────────────────────────────────────── -->
+    <h2 id="arch" class="md-h">ARCHITECTURE</h2>
+
+    <div class="diagram">┌─────────────┐   HTTPS   ┌────────────────────┐   localhost   ┌──────────────────┐
+│  Flutter    │  ──────▶  │  PHP API           │  ──────────▶  │  Node + Baileys  │
+│  app        │           │  /api/auth/*       │   :3100       │  (WhatsApp Web)  │
+└─────────────┘           └────────────────────┘               └──────────────────┘
+                                   │                                     │
+                                   ▼                                     ▼
+                              ┌─────────┐                           ┌────────┐
+                              │ MariaDB │                           │ Auth   │
+                              │ baytoti │                           │ folder │
+                              └─────────┘                           │ (disk) │
+                                                                    └────────┘</div>
+
+    <div class="callout">
+      <b>العزل:</b> Baileys تشتغل على <code class="inline">127.0.0.1:3100</code> فقط —
+      ما تطّلع عالنت. PHP يناديها عبر <code class="inline">curl</code> مع
+      <code class="inline">X-Service-Key</code>. هيك أي اختراق للـ Node ما يصير مباشر من النت.
+    </div>
+
+    <!-- ── Schema ───────────────────────────────────────────── -->
+    <h2 id="schema" class="md-h">SCHEMA <span class="hint">— إضافات على <code class="inline">backend/schema.sql</code></span></h2>
+
+<pre class="code"><span class="c">-- يوزرز: الهوية الوحيدة هي رقم الموبايل E.164</span>
+<span class="k">CREATE TABLE</span> users (
+  id         <span class="k">VARCHAR</span>(16)  <span class="k">NOT NULL PRIMARY KEY</span>,
+  phone_e164 <span class="k">VARCHAR</span>(20)  <span class="k">NOT NULL UNIQUE</span>,
+  name       <span class="k">VARCHAR</span>(50)  <span class="k">NULL</span>,
+  created_at <span class="k">DATETIME</span>     <span class="k">NOT NULL</span>
+);
+
+<span class="c">-- OTP: نخزن SHA-256 للكود، مع صلاحية 5 دقائق + حد محاولات</span>
+<span class="k">CREATE TABLE</span> phone_otps (
+  phone_e164  <span class="k">VARCHAR</span>(20)  <span class="k">NOT NULL PRIMARY KEY</span>,
+  code_hash   <span class="k">VARCHAR</span>(64)  <span class="k">NOT NULL</span>,
+  attempts    <span class="k">TINYINT</span>      <span class="k">NOT NULL DEFAULT</span> 0,
+  expires_at  <span class="k">DATETIME</span>     <span class="k">NOT NULL</span>,
+  created_at  <span class="k">DATETIME</span>     <span class="k">NOT NULL</span>
+);
+
+<span class="c">-- توكن الجلسة: نرسل القيمة للموبايل مرة وحدة، ونخزن هاش فقط</span>
+<span class="k">CREATE TABLE</span> auth_tokens (
+  token_hash  <span class="k">VARCHAR</span>(64)  <span class="k">NOT NULL PRIMARY KEY</span>,
+  user_id     <span class="k">VARCHAR</span>(16)  <span class="k">NOT NULL</span>,
+  created_at  <span class="k">DATETIME</span>     <span class="k">NOT NULL</span>,
+  last_seen   <span class="k">DATETIME</span>     <span class="k">NOT NULL</span>,
+  <span class="k">FOREIGN KEY</span> (user_id) <span class="k">REFERENCES</span> users(id) <span class="k">ON DELETE CASCADE</span>
+);</pre>
+
+    <div class="callout">
+      جداول <code class="inline">lists</code> / <code class="inline">members</code> /
+      <code class="inline">purchases</code> لا تتغيّر. القوائم تظل مشتركة بالـ
+      <code class="inline">inviteCode</code> — الـ auth يضيف هوية موحّدة فقط.
+    </div>
+
+    <!-- ── Baileys service ──────────────────────────────────── -->
+    <h2 id="baileys" class="md-h">BAILEYS SERVICE <span class="hint">— Node.js على <code class="inline">127.0.0.1:3100</code></span></h2>
+
+    <div class="row">
+      <span class="num">01</span>
+      <div class="body">
+        نشر الملفات تحت <code>/var/www/baileys-service/</code>
+        <span class="meta"><code>package.json</code> · <code>server.js</code> · <code>.env</code> · <code>auth_info_baileys/</code></span>
+      </div>
+    </div>
+
+    <div class="row">
+      <span class="num">02</span>
+      <div class="body">
+        Endpoint واحد فقط: <code>POST /send</code>
+        <span class="meta">Header: <code>X-Service-Key</code> · Body: <code>{ phone, text }</code> · Resp: <code>200 { ok: true }</code></span>
+      </div>
+    </div>
+
+    <div class="row">
+      <span class="num">03</span>
+      <div class="body">
+        systemd unit <code>baileys.service</code> يضمن التشغيل الدائم + إعادة التشغيل عند الفشل
+        <span class="meta"><code>sudo systemctl enable --now baileys</code></span>
+      </div>
+    </div>
+
+    <div class="row">
+      <span class="num">04</span>
+      <div class="body">
+        أول تشغيل: QR pairing عبر <code>journalctl -u baileys -f</code>
+        <span class="meta">واتس اب → الأجهزة المربوطة → مسح QR · الجلسة تتحفظ تلقائيًا</span>
+      </div>
+    </div>
+
+    <!-- ── PHP ──────────────────────────────────────────────── -->
+    <h2 id="php" class="md-h">PHP ENDPOINTS</h2>
+
+    <div class="table-wrap">
+      <table class="t">
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Path</th>
+            <th>Request</th>
+            <th>Response</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>POST</code></td>
+            <td><code>/api/auth/send-otp</code></td>
+            <td><code>{ phone: "+962791234567" }</code></td>
+            <td><code>{ ok: true, resendIn: 60 }</code></td>
+          </tr>
+          <tr>
+            <td><code>POST</code></td>
+            <td><code>/api/auth/verify-otp</code></td>
+            <td><code>{ phone, code: "439821" }</code></td>
+            <td><code>{ token, user }</code></td>
+          </tr>
+          <tr>
+            <td><code>GET</code></td>
+            <td><code>/api/auth/me</code></td>
+            <td>Header: <code>Authorization: Bearer &lt;token&gt;</code></td>
+            <td><code>{ user }</code> or <code>401</code></td>
+          </tr>
+          <tr>
+            <td><code>POST</code></td>
+            <td><code>/api/auth/logout</code></td>
+            <td>Header: <code>Authorization: Bearer &lt;token&gt;</code></td>
+            <td><code>{ ok: true }</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <h3>OTP rules</h3>
+        <p>6 أرقام · صلاحية 5 دقائق · حد 5 محاولات · لا نخزن الكود مكشوف (SHA-256).</p>
+      </div>
+      <div class="card">
+        <h3>Rate limit</h3>
+        <p>IP واحد لا يطلب أكثر من 3 OTPs خلال 10 دقائق. يمنع abuse.</p>
+      </div>
+      <div class="card">
+        <h3>Token</h3>
+        <p>256-bit عشوائي، نرسله مرة وحدة للموبايل، نخزن SHA-256 فقط على السيرفر.</p>
+      </div>
+      <div class="card">
+        <h3>Phone format</h3>
+        <p>E.164 صارم فقط: <code class="inline">+962791234567</code>. نرفض أي صيغة ثانية.</p>
+      </div>
+    </div>
+
+    <!-- ── Flutter ──────────────────────────────────────────── -->
+    <h2 id="flutter" class="md-h">FLUTTER <span class="hint">— ملفات جديدة</span></h2>
+
+<pre class="code">lib/
+├── data/
+│   └── auth_api.dart            <span class="c"># sendOtp / verifyOtp / me / logout</span>
+└── ui/
+    ├── phone_login_screen.dart  <span class="c"># إدخال رقم الموبايل</span>
+    └── otp_verify_screen.dart   <span class="c"># إدخال الكود (6 خانات)</span></pre>
+
+    <div class="diagram">LandingScreen (مع auth)
+   │
+   ├── مش مسجل  →  PhoneLoginScreen  →  OtpVerifyScreen  →  حفظ التوكن  →  LandingScreen
+   └── مسجل     →  ListScreen مباشرة</div>
+
+    <div class="callout">
+      <b>تخزين التوكن:</b> <code class="inline">shared_preferences</code> بالمفتاح
+      <code class="inline">bayti_auth_token</code>. كل طلب HTTP من
+      <code class="inline">repository.dart</code> يضيف
+      <code class="inline">Authorization: Bearer &lt;token&gt;</code> إذا موجود.
+    </div>
+
+    <!-- ── Steps ────────────────────────────────────────────── -->
+    <h2 id="steps" class="md-h">
+      EXECUTION ORDER <span class="hint">— 7 خطوات مرتّبة</span>
+      <span class="counter"><b>0</b> / 7</span>
+    </h2>
+
+    <div class="row check-row todo">
+      <span class="box"></span>
+      <div class="body">
+        <span class="label">إضافة جداول <code>users</code> / <code>phone_otps</code> / <code>auth_tokens</code></span>
+        <span class="meta">file: <code>backend/schema.sql</code> · verify: <code>SHOW TABLES</code></span>
+      </div>
+      <span class="tag todo">todo</span>
+    </div>
+
+    <div class="row check-row todo">
+      <span class="box"></span>
+      <div class="body">
+        <span class="label">كتابة Baileys service (Express + Baileys)</span>
+        <span class="meta">file: <code>baileys-service/server.js</code> · verify: <code>curl -X POST ...</code></span>
+      </div>
+      <span class="tag todo">todo</span>
+    </div>
+
+    <div class="row check-row todo">
+      <span class="box"></span>
+      <div class="body">
+        <span class="label">نشر Baileys + systemd + QR pairing</span>
+        <span class="meta">file: <code>/etc/systemd/system/baileys.service</code> · verify: <code>systemctl status baileys = active</code></span>
+      </div>
+      <span class="tag todo">todo</span>
+    </div>
+
+    <div class="row check-row todo">
+      <span class="box"></span>
+      <div class="body">
+        <span class="label">كتابة PHP endpoints الأربعة</span>
+        <span class="meta">file: <code>backend/auth.php</code> + routing في <code>index.php</code> · verify: <code>curl /api/auth/send-otp</code></span>
+      </div>
+      <span class="tag todo">todo</span>
+    </div>
+
+    <div class="row check-row todo">
+      <span class="box"></span>
+      <div class="body">
+        <span class="label">شاشة Login + OTP في فلاتر</span>
+        <span class="meta">files: <code>lib/ui/phone_login_screen.dart</code> + <code>otp_verify_screen.dart</code> · verify: وصلت رسالة واتس اب</span>
+      </div>
+      <span class="tag todo">todo</span>
+    </div>
+
+    <div class="row check-row todo">
+      <span class="box"></span>
+      <div class="body">
+        <span class="label">ربط التوكن بكل طلبات <code>repository.dart</code></span>
+        <span class="meta">file: <code>lib/data/repository.dart</code> · verify: <code>GET /api/auth/me</code> يرجع اليوزر</span>
+      </div>
+      <span class="tag todo">todo</span>
+    </div>
+
+    <div class="row check-row todo">
+      <span class="box"></span>
+      <div class="body">
+        <span class="label">اختبار كامل E2E — تسجيل حساب جديد ثم إنشاء قائمة</span>
+        <span class="meta">verify: جلسة كاملة من OTP إلى إضافة عنصر</span>
+      </div>
+      <span class="tag todo">todo</span>
+    </div>
+
+    <h2 class="md-h">NOTES <span class="hint">— تشغيلية</span></h2>
+
+    <div class="row">
+      <span class="num">!</span>
+      <div class="body">
+        <b>حماية الرقم:</b> استخدم SIM مخصص للـ WhatsApp Business. لا تشاركه مع
+        جهات اتصال شخصية. خفّف الرسائل (OTP لكل عملية حقيقية، مش لكل ضغطة زر).
+      </div>
+    </div>
+
+    <div class="row">
+      <span class="num">!</span>
+      <div class="body">
+        <b>النسخ الاحتياطي:</b> مجلد <code>auth_info_baileys/</code> حيوي — إذا راح
+        رح تحتاج تعيد مسح QR. ضمّنه في نسخة احتياطية يومية.
+      </div>
+    </div>
+
+    <div class="row">
+      <span class="num">!</span>
+      <div class="body">
+        <b>الهجرة المستقبلية:</b> عند تجاوز ~500 يوزر، تحوّل إلى
+        <a href="https://developers.facebook.com/docs/whatsapp/cloud-api/" target="_blank" rel="noopener">WhatsApp Cloud API</a>.
+        واجهة PHP نفسها — بس نبدّل transport في <code>baileys-service</code>.
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

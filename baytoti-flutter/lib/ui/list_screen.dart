@@ -5,7 +5,6 @@ import 'package:share_plus/share_plus.dart';
 import '../data/arabic_text.dart';
 import '../data/models.dart';
 import '../data/repository.dart';
-import 'glass.dart';
 import 'members_screen.dart';
 import 'name_prompt.dart';
 import 'price_prompt.dart';
@@ -16,7 +15,7 @@ import 'theme.dart';
 
 enum _Tab { needs, purchases, history }
 
-enum _Filter { week, all, archive }
+enum _Filter { week, all }
 
 class ListScreen extends StatefulWidget {
   const ListScreen({super.key, required this.repo, required this.listId});
@@ -58,11 +57,12 @@ class _ListScreenState extends State<ListScreen> {
       a.year == b.year && a.month == b.month && a.day == b.day;
 
   List<Purchase> get _filteredPurchases {
-    if (_filter == _Filter.all || _filter == _Filter.archive) return _purchases;
+    if (_filter == _Filter.all) return _purchases;
     return _purchases.where((p) => _inCurrentWeek(p.date)).toList();
   }
 
-  double get _total => _filteredPurchases.fold(0.0, (s, p) => s + (p.price ?? 0));
+  double get _total =>
+      _filteredPurchases.fold(0.0, (s, p) => s + (p.price ?? 0));
 
   Future<bool> _confirmSameDayDup(String itemName) async {
     final key = normalizeAr(itemName);
@@ -157,7 +157,7 @@ class _ListScreenState extends State<ListScreen> {
           content: Text('تم نقل "${w.itemName}" إلى المشتريات'),
           action: SnackBarAction(
             label: 'تراجع',
-            textColor: BaytiColors.accent,
+            textColor: Colors.white,
             onPressed: () async {
               await widget.repo.addWish(widget.listId, w);
               await widget.repo.deletePurchase(widget.listId, p.id);
@@ -178,7 +178,9 @@ class _ListScreenState extends State<ListScreen> {
       context: context,
       builder: (_) => PurchaseDialog(initial: p),
     );
-    if (updated != null) await widget.repo.updatePurchase(widget.listId, updated);
+    if (updated != null) {
+      await widget.repo.updatePurchase(widget.listId, updated);
+    }
   }
 
   Future<void> _confirmDelete({required VoidCallback onConfirm}) async {
@@ -187,6 +189,7 @@ class _ListScreenState extends State<ListScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('تأكيد الحذف'),
         content: const Text('هل أنت متأكد من حذف هذا العنصر؟'),
+        actionsAlignment: MainAxisAlignment.center,
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
@@ -274,212 +277,297 @@ class _ListScreenState extends State<ListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBody: true,
-      appBar: _buildAppBar(),
-      body: StreamBuilder<ShoppingList?>(
-        stream: widget.repo.watchList(widget.listId),
-        builder: (ctx, snap) {
-          _list = snap.data;
-          return SafeArea(
-            bottom: false,
-            child: Column(
-              children: [
-                if (_tab != _Tab.needs) _buildFilter(),
-                if (_tab == _Tab.purchases) _buildHeroSummary(),
-                Expanded(child: _buildContent()),
-              ],
-            ),
-          );
-        },
-      ),
-      floatingActionButton: _tab == _Tab.history
-          ? null
-          : Padding(
-              padding: const EdgeInsets.only(bottom: 72),
-              child: GestureDetector(
-                onLongPress: _tab == _Tab.purchases ? _quickAdd : null,
-                child: FloatingActionButton.extended(
-                  onPressed: _addFab,
-                  icon: const Icon(Icons.add),
-                  label: Text(_tab == _Tab.needs ? 'ناقص' : 'مشترى'),
-                ),
-              ),
-            ),
+      backgroundColor: BaytiColors.bg,
+      floatingActionButton: _tab == _Tab.history ? null : _buildFab(),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: _buildBottomNav(),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      toolbarHeight: 72,
-      title: InkWell(
-        onTap: _renameList,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                child: Text(
-                  _list?.name ?? 'بيتي',
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 640),
+            child: StreamBuilder<ShoppingList?>(
+              stream: widget.repo.watchList(widget.listId),
+              builder: (ctx, snap) {
+                _list = snap.data;
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 14),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: BaytiColors.card,
+                      borderRadius: BorderRadius.circular(26),
+                      border: Border.all(color: BaytiColors.line),
+                      boxShadow: BaytiShadows.md,
+                    ),
+                    padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
+                    child: Column(
+                      children: [
+                        _buildHeader(),
+                        const SizedBox(height: 14),
+                        _buildTabs(),
+                        const SizedBox(height: 14),
+                        Expanded(child: _buildContent()),
+                      ],
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(width: 6),
-              Icon(Icons.edit, size: 15, color: BaytiColors.muted),
-            ],
+                );
+              },
+            ),
           ),
         ),
       ),
-      actions: [
-        IconButton(
-          tooltip: 'مشاركة',
-          icon: const Icon(Icons.ios_share),
-          onPressed: _share,
+    );
+  }
+
+  Widget _buildFab() {
+    final primary = context.bPrimary;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10, left: 4),
+      child: GestureDetector(
+        onLongPress: _tab == _Tab.purchases ? _quickAdd : null,
+        child: Container(
+          width: 62,
+          height: 62,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: primary.withValues(alpha: 0.38),
+                blurRadius: 22,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: FloatingActionButton(
+            onPressed: _addFab,
+            backgroundColor: primary,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            shape: const CircleBorder(),
+            child: const Icon(Icons.add_rounded, size: 30),
+          ),
         ),
-        PopupMenuButton<String>(
-          icon: const Icon(Icons.more_horiz),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          onSelected: (v) {
-            switch (v) {
-              case 'members':
-                _openMembers();
-                break;
-              case 'settings':
-                _openSettings();
-                break;
-            }
-          },
-          itemBuilder: (_) => const [
-            PopupMenuItem(value: 'members', child: Text('الأعضاء')),
-            PopupMenuItem(value: 'settings', child: Text('الإعدادات')),
-          ],
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    final memberCount = _list == null
+        ? 0
+        : (_list!.editors.length + (_list!.ownerName != null ? 1 : 0));
+    return Row(
+      children: [
+        Expanded(
+          child: InkWell(
+            onTap: _renameList,
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          _list?.name ?? 'بيت العائلة',
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: context.bPrimaryDark,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      const Icon(Icons.edit_rounded,
+                          size: 14, color: BaytiColors.placeholder),
+                    ],
+                  ),
+                  if (memberCount > 0) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      '$memberCount ${memberCount == 1 ? 'عضو' : 'أعضاء'}',
+                      style: const TextStyle(
+                        color: BaytiColors.mutedSoft,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
         ),
-        const SizedBox(width: 4),
+        _pillIconText(
+          icon: Icons.ios_share_rounded,
+          label: 'مشاركة',
+          onTap: _share,
+        ),
       ],
     );
   }
 
   Widget _buildBottomNav() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      child: GlassBar(
-        borderRadius: 24,
-        child: NavigationBar(
-          backgroundColor: Colors.transparent,
-          selectedIndex: _tab.index,
-          onDestinationSelected: (i) => setState(() => _tab = _Tab.values[i]),
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.checklist_rtl_outlined),
-              selectedIcon: Icon(Icons.checklist_rtl),
-              label: 'نواقص',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.shopping_basket_outlined),
-              selectedIcon: Icon(Icons.shopping_basket),
-              label: 'مشتريات',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.history_outlined),
-              selectedIcon: Icon(Icons.history),
-              label: 'السجل',
-            ),
-          ],
-        ),
+    return Container(
+      decoration: BoxDecoration(
+        color: BaytiColors.card,
+        border: Border(top: BorderSide(color: BaytiColors.line)),
+        boxShadow: BaytiShadows.sm,
       ),
-    );
-  }
-
-  Widget _buildFilter() {
-    final chips = <Widget>[
-      GlassPill(
-        label: 'هذا الأسبوع',
-        selected: _filter == _Filter.week,
-        onTap: () => setState(() => _filter = _Filter.week),
-      ),
-      const SizedBox(width: 8),
-      GlassPill(
-        label: 'الكل',
-        selected: _filter == _Filter.all,
-        onTap: () => setState(() => _filter = _Filter.all),
-      ),
-      if (_tab == _Tab.history) ...[
-        const SizedBox(width: 8),
-        GlassPill(
-          label: 'الأرشيف',
-          icon: Icons.archive_outlined,
-          selected: _filter == _Filter.archive,
-          onTap: () => setState(() => _filter = _Filter.archive),
-        ),
-      ],
-    ];
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(children: chips),
-      ),
-    );
-  }
-
-  Widget _buildHeroSummary() {
-    final items = _filteredPurchases;
-    return GlassHero(
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(Icons.payments_outlined,
-                color: Colors.white, size: 26),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _navButton(
+                icon: Icons.settings_outlined,
+                label: 'الإعدادات',
+                onTap: _openSettings,
+              ),
+              _navButton(
+                icon: Icons.people_outline_rounded,
+                label: 'الأعضاء',
+                onTap: _openMembers,
+              ),
+            ],
           ),
-          const SizedBox(width: 14),
-          Expanded(
+        ),
+      ),
+    );
+  }
+
+  Widget _navButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  _filter == _Filter.week ? 'مصاريف هذا الأسبوع' : 'مصاريف الكل',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.85),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${_total.toStringAsFixed(3)} د.أ',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 26,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.5,
-                  ),
-                ),
+                Icon(icon, size: 22, color: context.bPrimaryDark),
                 const SizedBox(height: 2),
                 Text(
-                  '${items.length} عنصر',
+                  label,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.8),
-                    fontSize: 12,
+                    color: context.bPrimaryDark,
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
           ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  Widget _pillIconText({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: BaytiColors.chipBg,
+      shape: const StadiumBorder(),
+      child: InkWell(
+        customBorder: const StadiumBorder(),
+        onTap: onTap,
+        child: Padding(
+          padding:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: BaytiColors.muted),
+              const SizedBox(width: 6),
+              Text(label,
+                  style: const TextStyle(
+                    color: BaytiColors.muted,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  )),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTabs() {
+    final tabs = const [
+      ('النواقص', _Tab.needs),
+      ('المشتريات', _Tab.purchases),
+      ('السجل', _Tab.history),
+    ];
+    final selectedIndex = tabs.indexWhere((t) => t.$2 == _tab);
+    return LayoutBuilder(
+      builder: (ctx, c) {
+        final innerWidth = c.maxWidth - 8;
+        final itemWidth = innerWidth / tabs.length;
+        return Container(
+          height: 46,
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: BaytiColors.itemCardHover,
+            borderRadius: BorderRadius.circular(60),
+          ),
+          child: Stack(
+            children: [
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 240),
+                curve: Curves.easeOutCubic,
+                top: 0,
+                bottom: 0,
+                right: selectedIndex * itemWidth,
+                width: itemWidth,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: BaytiColors.card,
+                    borderRadius: BorderRadius.circular(60),
+                    boxShadow: BaytiShadows.sm,
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  for (final (label, tab) in tabs)
+                    Expanded(child: _tabButton(label, tab)),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _tabButton(String label, _Tab tab) {
+    final active = _tab == tab;
+    return InkWell(
+      customBorder: const StadiumBorder(),
+      onTap: () => setState(() => _tab = tab),
+      child: Center(
+        child: AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 180),
+          style: TextStyle(
+            color: active ? context.bPrimaryDark : BaytiColors.muted,
+            fontWeight: active ? FontWeight.w700 : FontWeight.w600,
+            fontSize: 14,
+          ),
+          child: Text(label),
+        ),
       ),
     );
   }
@@ -489,10 +577,13 @@ class _ListScreenState extends State<ListScreen> {
       case _Tab.needs:
         return _buildNeedsTab();
       case _Tab.purchases:
-      case _Tab.history:
         return _buildPurchasesTab();
+      case _Tab.history:
+        return _buildHistoryTab();
     }
   }
+
+  // ===== NEEDS TAB =====
 
   Widget _buildNeedsTab() {
     return StreamBuilder<List<WishItem>>(
@@ -500,79 +591,51 @@ class _ListScreenState extends State<ListScreen> {
       builder: (ctx, snap) {
         _wishlist = snap.data ?? const [];
         return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-              child: _TopAddButton(
-                label: 'أضف شيئاً ناقصاً',
-                icon: Icons.add_circle_outline,
-                onTap: _addNeed,
-              ),
+            Row(
+              children: [
+                _primaryPillButton(
+                  icon: Icons.add_rounded,
+                  label: 'إضافة عنصر',
+                  onTap: _addNeed,
+                ),
+                const Spacer(),
+                if (_wishlist.isNotEmpty)
+                  Text(
+                    '${_wishlist.length} عنصر',
+                    style: const TextStyle(
+                      color: BaytiColors.mutedSoft,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+              ],
             ),
+            const SizedBox(height: 14),
             if (snap.connectionState == ConnectionState.waiting &&
                 _wishlist.isEmpty)
-              const Expanded(child: Center(child: CircularProgressIndicator()))
+              const Expanded(
+                  child: Center(child: CircularProgressIndicator()))
             else if (_wishlist.isEmpty)
               const Expanded(
                 child: _EmptyState(
-                  icon: Icons.inventory_2_outlined,
-                  title: 'لا توجد نواقص',
-                  subtitle: 'اضغط الزر أعلاه لإضافة ما يلزم البيت',
+                  emoji: '📝',
+                  message: 'لا توجد نواقص حالياً',
                 ),
               )
             else
               Expanded(
-                child: ListView.builder(
-                  padding: const EdgeInsets.only(bottom: 140),
-                  itemCount: _wishlist.length,
-                  itemBuilder: (_, i) {
-                    final w = _wishlist[i];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 6),
-                      child: GlassSurface(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.only(
-                              right: 8, left: 4),
-                          leading: Transform.scale(
-                            scale: 1.15,
-                            child: Checkbox(
-                              value: false,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              side: BorderSide(
-                                  color: BaytiColors.muted, width: 1.5),
-                              onChanged: (_) => _convertNeedViaCheckbox(w),
-                            ),
-                          ),
-                          title: Text(
-                            w.itemName,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                            ),
-                          ),
-                          subtitle: Text(
-                            'أضافه ${w.addedByName}',
-                            style: TextStyle(
-                                color: BaytiColors.muted, fontSize: 12),
-                          ),
-                          trailing: IconButton(
-                            tooltip: 'حذف',
-                            icon: Icon(Icons.close,
-                                color: BaytiColors.muted, size: 20),
-                            onPressed: () => _confirmDelete(
-                              onConfirm: () =>
-                                  widget.repo.deleteWish(widget.listId, w.id),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
+                child: RefreshIndicator(
+                  onRefresh: () => widget.repo.refresh(widget.listId),
+                  color: context.bPrimary,
+                  child: ListView.separated(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.only(bottom: 100),
+                    itemCount: _wishlist.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    itemBuilder: (_, i) => _needRow(_wishlist[i]),
+                  ),
                 ),
               ),
           ],
@@ -581,256 +644,558 @@ class _ListScreenState extends State<ListScreen> {
     );
   }
 
+  Widget _needRow(WishItem w) {
+    return _itemCard(
+      child: Row(
+        children: [
+          Transform.scale(
+            scale: 1.15,
+            child: Checkbox(
+              value: false,
+              activeColor: context.bPrimary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
+              side:
+                  const BorderSide(color: BaytiColors.muted, width: 1.5),
+              onChanged: (_) => _convertNeedViaCheckbox(w),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  w.itemName,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                    color: BaytiColors.text,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  w.addedByName,
+                  style: const TextStyle(
+                    color: BaytiColors.mutedSoft,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _iconBtn(
+            icon: Icons.delete_outline_rounded,
+            danger: true,
+            onTap: () => _confirmDelete(
+              onConfirm: () => widget.repo.deleteWish(widget.listId, w.id),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ===== PURCHASES TAB =====
+
   Widget _buildPurchasesTab() {
-    final viewingArchive =
-        _tab == _Tab.history && _filter == _Filter.archive;
     return StreamBuilder<List<Purchase>>(
-      stream: viewingArchive
-          ? widget.repo.watchArchive(widget.listId)
-          : widget.repo.watchPurchases(widget.listId),
+      stream: widget.repo.watchPurchases(widget.listId),
       builder: (ctx, snap) {
         _purchases = snap.data ?? const [];
         if (snap.connectionState == ConnectionState.waiting &&
             _purchases.isEmpty) {
           return const Center(child: CircularProgressIndicator());
         }
-        final items = _tab == _Tab.purchases ? _filteredPurchases : _purchases;
-        if (items.isEmpty) {
-          return _EmptyState(
-            icon: _tab == _Tab.purchases
-                ? Icons.shopping_basket_outlined
-                : (viewingArchive ? Icons.inventory : Icons.history),
-            title: _tab == _Tab.purchases
-                ? 'لا توجد مشتريات'
-                : (viewingArchive ? 'الأرشيف فارغ' : 'السجل فارغ'),
-            subtitle: _tab == _Tab.purchases ? 'اضغط + لإضافة مشترى' : '',
-          );
-        }
-        final df = DateFormat('yyyy/MM/dd • HH:mm');
-        return ListView.builder(
-          padding: const EdgeInsets.only(bottom: 140),
-          itemCount: items.length,
-          itemBuilder: (_, i) {
-            final p = items[i];
-            return Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              child: GlassSurface(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: _categoryColor(p.category)
-                                .withValues(alpha: 0.18),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Icon(
-                            _categoryIcon(p.category),
-                            color: _categoryColor(p.category),
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                p.itemName,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 15,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                '${categoryLabelAr(p.category)} · ${p.addedByName} · ${df.format(p.date)}',
-                                style: TextStyle(
-                                  color: BaytiColors.muted,
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (p.price != null)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 5),
-                            decoration: BoxDecoration(
-                              color: BaytiColors.primarySoft
-                                  .withValues(alpha: 0.7),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              '${p.price!.toStringAsFixed(3)} د.أ',
-                              style: TextStyle(
-                                color: BaytiColors.primaryDark,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                    if (p.note != null) ...[
-                      const SizedBox(height: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: BaytiColors.accentSoft
-                              .withValues(alpha: 0.6),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Icon(Icons.sticky_note_2_outlined,
-                                size: 16, color: Color(0xFFB45309)),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                p.note!,
-                                style: const TextStyle(
-                                  color: Color(0xFF78350F),
-                                  fontSize: 12,
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 4),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: _tab == _Tab.history
-                          ? [
-                              IconButton(
-                                tooltip: p.archived ? 'استرجاع' : 'أرشفة',
-                                icon: Icon(
-                                  p.archived
-                                      ? Icons.unarchive_outlined
-                                      : Icons.archive_outlined,
-                                  color: BaytiColors.muted,
-                                  size: 20,
-                                ),
-                                onPressed: () => widget.repo.archivePurchase(
-                                    widget.listId, p.id, !p.archived),
-                              ),
-                            ]
-                          : [
-                              IconButton(
-                                icon: Icon(Icons.edit_outlined,
-                                    size: 20, color: BaytiColors.muted),
-                                onPressed: () => _editPurchase(p),
-                              ),
-                              IconButton(
-                                icon: Icon(Icons.delete_outline,
-                                    color: BaytiColors.danger, size: 20),
-                                onPressed: () => _confirmDelete(
-                                  onConfirm: () => widget.repo
-                                      .deletePurchase(widget.listId, p.id),
-                                ),
-                              ),
-                            ],
-                    ),
-                  ],
+        final items = _filteredPurchases
+          ..sort((a, b) => b.date.compareTo(a.date));
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _filterChips(),
+            const SizedBox(height: 12),
+            _summaryCard(count: items.length, total: _total),
+            const SizedBox(height: 12),
+            if (items.isEmpty)
+              const Expanded(
+                child: _EmptyState(
+                  emoji: '🛒',
+                  message: 'لا توجد مشتريات هذا الأسبوع — أضف أول مشترى',
+                ),
+              )
+            else
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: () => widget.repo.refresh(widget.listId),
+                  color: context.bPrimary,
+                  child: ListView.separated(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.only(bottom: 100),
+                    itemCount: items.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    itemBuilder: (_, i) => _purchaseRow(items[i]),
+                  ),
                 ),
               ),
-            );
-          },
+          ],
         );
       },
     );
   }
-}
 
-Color _categoryColor(PurchaseCategory c) {
-  switch (c) {
-    case PurchaseCategory.food:
-      return BaytiColors.primary;
-    case PurchaseCategory.cleaning:
-      return const Color(0xFF6366F1);
-    case PurchaseCategory.other:
-      return BaytiColors.accent;
+  Widget _filterChips() {
+    return Row(
+      children: [
+        _chip('هذا الأسبوع', selected: _filter == _Filter.week,
+            onTap: () => setState(() => _filter = _Filter.week)),
+        const SizedBox(width: 8),
+        _chip('الكل',
+            selected: _filter == _Filter.all,
+            onTap: () => setState(() => _filter = _Filter.all)),
+      ],
+    );
   }
-}
 
-IconData _categoryIcon(PurchaseCategory c) {
-  switch (c) {
-    case PurchaseCategory.food:
-      return Icons.restaurant;
-    case PurchaseCategory.cleaning:
-      return Icons.cleaning_services;
-    case PurchaseCategory.other:
-      return Icons.inventory_2;
-  }
-}
-
-class _TopAddButton extends StatelessWidget {
-  const _TopAddButton({
-    required this.label,
-    required this.icon,
-    required this.onTap,
-  });
-  final String label;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GlassSurface(
-      borderRadius: 18,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      onTap: onTap,
-      tint: BaytiColors.primary,
-      opacity: 0.18,
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: BaytiColors.primary.withValues(alpha: 0.9),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: Colors.white, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
+  Widget _chip(String label,
+      {required bool selected, required VoidCallback onTap}) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(60),
+        boxShadow: selected
+            ? [
+                BoxShadow(
+                  color: context.bPrimary.withValues(alpha: 0.28),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : const [],
+      ),
+      child: Material(
+        color: selected ? context.bPrimary : BaytiColors.chipBg,
+        shape: const StadiumBorder(),
+        child: InkWell(
+          customBorder: const StadiumBorder(),
+          onTap: onTap,
+          child: Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Text(
               label,
               style: TextStyle(
-                color: BaytiColors.primaryDark,
-                fontWeight: FontWeight.w700,
-                fontSize: 15,
+                color: selected ? Colors.white : const Color(0xFF5E5249),
+                fontWeight: FontWeight.w600,
+                fontSize: 13.5,
               ),
             ),
           ),
-          Icon(Icons.chevron_left,
-              color: BaytiColors.primaryDark, size: 22),
+        ),
+      ),
+    );
+  }
+
+  Widget _summaryCard({required int count, required double total}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+          colors: [
+            BaytiColors.summaryBg,
+            Color.lerp(BaytiColors.summaryBg, context.bPrimarySoft, 0.35) ??
+                BaytiColors.summaryBg,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: BaytiColors.summaryBorder),
+      ),
+      child: Row(
+        children: [
+          Expanded(child: _summaryCell('عدد العناصر', '$count')),
+          Container(
+            width: 1,
+            height: 40,
+            color: BaytiColors.summaryBorder,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: _summaryCell(
+              'المجموع',
+              '${total.toStringAsFixed(2)} د.أ',
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _summaryCell(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            color: BaytiColors.mutedSoft,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: context.bPrimaryDark,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _purchaseRow(Purchase p) {
+    final df = DateFormat('d MMM', 'ar');
+    return _itemCard(
+      onTap: () => _editPurchase(p),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          _categoryBadge(p.category),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  p.itemName,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                    color: BaytiColors.text,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 2,
+                  children: [
+                    if (p.price != null)
+                      Text(
+                        '${p.price!.toStringAsFixed(2)} د.أ',
+                        style: TextStyle(
+                          color: context.bPrimaryDark,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12.5,
+                        ),
+                      ),
+                    Text(p.addedByName, style: _metaStyle),
+                    Text(df.format(p.date), style: _metaStyle),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          _iconBtn(
+            icon: Icons.delete_outline_rounded,
+            danger: true,
+            onTap: () => _confirmDelete(
+              onConfirm: () =>
+                  widget.repo.deletePurchase(widget.listId, p.id),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _categoryBadge(PurchaseCategory c) {
+    final (icon, color) = switch (c) {
+      PurchaseCategory.food => (Icons.restaurant_rounded, const Color(0xFFC08457)),
+      PurchaseCategory.cleaning =>
+        (Icons.cleaning_services_rounded, const Color(0xFF6B8CAE)),
+      PurchaseCategory.other =>
+        (Icons.inventory_2_outlined, const Color(0xFF9A8E82)),
+    };
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Icon(icon, size: 20, color: color),
+    );
+  }
+
+  // ===== HISTORY TAB =====
+
+  Widget _buildHistoryTab() {
+    return StreamBuilder<List<Purchase>>(
+      stream: widget.repo.watchPurchases(widget.listId),
+      builder: (ctx, snap) {
+        _purchases = snap.data ?? const [];
+        if (snap.connectionState == ConnectionState.waiting &&
+            _purchases.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (_purchases.isEmpty) {
+          return const _EmptyState(
+            emoji: '📅',
+            message: 'لا توجد مشتريات مسجّلة بعد',
+          );
+        }
+
+        final groups = <int, _WeekGroup>{};
+        for (final p in _purchases) {
+          final start = _sundayStart(p.date);
+          final key = start.millisecondsSinceEpoch;
+          final g = groups[key] ??
+              _WeekGroup(start: start, count: 0, total: 0);
+          g.count += 1;
+          if (p.price != null) g.total += p.price!;
+          groups[key] = g;
+        }
+        final weeks = groups.values.toList()
+          ..sort((a, b) => b.start.compareTo(a.start));
+        final todayKey = _sundayStart(DateTime.now()).millisecondsSinceEpoch;
+
+        return RefreshIndicator(
+          onRefresh: () => widget.repo.refresh(widget.listId),
+          color: context.bPrimary,
+          child: ListView.separated(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.only(bottom: 100),
+            itemCount: weeks.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 8),
+            itemBuilder: (_, i) {
+              final w = weeks[i];
+              return _historyRow(w,
+                  isCurrent: w.start.millisecondsSinceEpoch == todayKey);
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _historyRow(_WeekGroup w, {required bool isCurrent}) {
+    final df = DateFormat('d MMM', 'ar');
+    final dfYear = DateFormat('d MMM y', 'ar');
+    final end = w.start.add(const Duration(days: 6));
+    final startStr = df.format(w.start);
+    final endStr = dfYear.format(end);
+    final label = isCurrent ? 'هذا الأسبوع' : 'أسبوع $startStr';
+    return _itemCard(
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: context.bPrimarySoft,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(Icons.calendar_today_rounded,
+                size: 18, color: context.bPrimaryDark),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                        color: BaytiColors.text,
+                      ),
+                    ),
+                    if (isCurrent) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 7, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: context.bPrimary,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: const Text(
+                          'جاري',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '$startStr — $endStr',
+                  style: const TextStyle(
+                    color: BaytiColors.mutedSoft,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${w.total.toStringAsFixed(2)} د.أ',
+                style: TextStyle(
+                  color: context.bPrimaryDark,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '${w.count} عنصر',
+                style: const TextStyle(
+                  color: BaytiColors.mutedSoft,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  DateTime _sundayStart(DateTime d) {
+    final day = DateTime(d.year, d.month, d.day);
+    final offset = day.weekday % 7;
+    return day.subtract(Duration(days: offset));
+  }
+
+  // ===== Reusable pieces =====
+
+  TextStyle get _metaStyle => const TextStyle(
+        fontSize: 12.5,
+        color: BaytiColors.mutedSoft,
+        fontWeight: FontWeight.w500,
+      );
+
+  Widget _itemCard({required Widget child, VoidCallback? onTap}) {
+    return Material(
+      color: BaytiColors.itemCard,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: BaytiColors.line, width: 1),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        splashColor: BaytiColors.chipHover.withValues(alpha: 0.2),
+        highlightColor: BaytiColors.itemCardHover,
+        child: Padding(
+          padding:
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  Widget _iconBtn({
+    required IconData icon,
+    required VoidCallback onTap,
+    bool danger = false,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        splashColor: danger ? BaytiColors.dangerSoft : BaytiColors.chipHover,
+        highlightColor:
+            danger ? BaytiColors.dangerSoft : BaytiColors.chipHover,
+        child: SizedBox(
+          width: 36,
+          height: 36,
+          child: Icon(
+            icon,
+            size: 20,
+            color: danger ? BaytiColors.danger : BaytiColors.mutedSoft,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _primaryPillButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    final primary = context.bPrimary;
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(60),
+        boxShadow: [
+          BoxShadow(
+            color: primary.withValues(alpha: 0.26),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Material(
+        color: primary,
+        shape: const StadiumBorder(),
+        child: InkWell(
+          customBorder: const StadiumBorder(),
+          onTap: onTap,
+          child: Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 18, color: Colors.white),
+                const SizedBox(width: 6),
+                Text(label,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                    )),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
 }
 
+class _WeekGroup {
+  _WeekGroup({required this.start, required this.count, required this.total});
+  final DateTime start;
+  int count;
+  double total;
+}
+
 class _EmptyState extends StatelessWidget {
-  const _EmptyState(
-      {required this.icon, required this.title, required this.subtitle});
-  final IconData icon;
-  final String title;
-  final String subtitle;
+  const _EmptyState({required this.emoji, required this.message});
+  final String emoji;
+  final String message;
 
   @override
   Widget build(BuildContext context) {
@@ -841,36 +1206,28 @@ class _EmptyState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 96,
-              height: 96,
+              width: 80,
+              height: 80,
               decoration: BoxDecoration(
+                color: BaytiColors.itemCard,
                 shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [
-                    BaytiColors.primary.withValues(alpha: 0.18),
-                    BaytiColors.accent.withValues(alpha: 0.12),
-                  ],
-                ),
+                border: Border.all(color: BaytiColors.line),
               ),
-              child: Icon(icon, size: 42, color: BaytiColors.primaryDark),
+              child: Center(
+                child: Text(emoji, style: const TextStyle(fontSize: 38)),
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             Text(
-              title,
-              style: TextStyle(
-                fontSize: 17,
-                color: BaytiColors.text,
-                fontWeight: FontWeight.w700,
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Color(0xFF9E9288),
+                fontSize: 15,
+                height: 1.7,
+                fontWeight: FontWeight.w500,
               ),
             ),
-            if (subtitle.isNotEmpty) ...[
-              const SizedBox(height: 6),
-              Text(
-                subtitle,
-                textAlign: TextAlign.center,
-                style: TextStyle(color: BaytiColors.muted),
-              ),
-            ],
           ],
         ),
       ),

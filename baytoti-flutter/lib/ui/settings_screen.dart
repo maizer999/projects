@@ -5,6 +5,7 @@ import '../data/models.dart';
 import '../data/repository.dart';
 import '../main.dart';
 import 'landing_screen.dart';
+import 'list_screen.dart';
 import 'name_prompt.dart';
 import 'theme.dart';
 
@@ -107,6 +108,83 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  String _extractCode(String input) {
+    final uri = Uri.tryParse(input);
+    if (uri != null) {
+      final q = uri.queryParameters['code'] ?? uri.queryParameters['list'];
+      if (q != null && q.isNotEmpty) return q.trim().toUpperCase();
+    }
+    return input.toUpperCase();
+  }
+
+  Future<void> _joinAnotherList() async {
+    final ctrl = TextEditingController();
+    final raw = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('الانضمام لقائمة أخرى'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'أدخل رمز الدعوة أو الصق الرابط الذي استلمته.',
+              style: TextStyle(color: BaytiColors.muted, fontSize: 13),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: ctrl,
+              autofocus: true,
+              textDirection: TextDirection.ltr,
+              textAlign: TextAlign.center,
+              textCapitalization: TextCapitalization.characters,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 2,
+              ),
+              decoration: const InputDecoration(
+                hintText: 'أدخل الرمز أو الصق الرابط',
+              ),
+              onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, ctrl.text.trim()),
+            child: const Text('انضمام'),
+          ),
+        ],
+      ),
+    );
+    if (raw == null || raw.isEmpty) return;
+    final joined = await widget.repo.joinViaCode(_extractCode(raw));
+    if (!mounted) return;
+    if (joined == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('رمز الدعوة غير صحيح')),
+      );
+      return;
+    }
+    if (joined.id == widget.listId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('أنت بالفعل في هذه القائمة')),
+      );
+      return;
+    }
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (_) => ListScreen(repo: widget.repo, listId: joined.id),
+      ),
+      (_) => false,
+    );
+  }
+
   Future<void> _leaveList(ShoppingList list) async {
     final me = await DisplayName.get();
     if (!mounted) return;
@@ -148,16 +226,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('الإعدادات')),
-      body: StreamBuilder<ShoppingList?>(
-        stream: widget.repo.watchList(widget.listId),
-        builder: (ctx, snap) {
-          final list = snap.data;
-          if (!_loaded || list == null) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          return ListView(
-            children: [
+      body: SafeArea(
+        child: StreamBuilder<ShoppingList?>(
+          stream: widget.repo.watchList(widget.listId),
+          builder: (ctx, snap) {
+            final list = snap.data;
+            final loading = !_loaded || list == null;
+            return Column(
+              children: [
+                _SettingsToolbar(listName: list?.name),
+                Expanded(
+                  child: loading
+                      ? const Center(child: CircularProgressIndicator())
+                      : ListView(
+                          children: [
               const _SectionHeader(label: 'الحساب'),
               ListTile(
                 leading: const Icon(Icons.person_outline),
@@ -173,6 +255,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     color: Color(0xFF25D366)),
                 title: const Text('مشاركة عبر واتساب'),
                 onTap: () => _shareWhatsApp(list),
+              ),
+              ListTile(
+                leading: Icon(Icons.login_rounded,
+                    color: context.bPrimaryDark),
+                title: const Text('الانضمام لقائمة أخرى'),
+                subtitle: Text('باستخدام رمز الدعوة أو الرابط',
+                    style: TextStyle(color: BaytiColors.muted)),
+                onTap: _joinAnotherList,
               ),
               ListTile(
                 leading: const Icon(Icons.archive_outlined),
@@ -196,9 +286,64 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: Text('بيتي'),
                 subtitle: Text('1.0.0', style: TextStyle(color: BaytiColors.muted)),
               ),
-            ],
-          );
-        },
+                          ],
+                        ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsToolbar extends StatelessWidget {
+  const _SettingsToolbar({required this.listName});
+  final String? listName;
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+        decoration: BoxDecoration(
+          color: BaytiColors.bg,
+          border: Border(bottom: BorderSide(color: BaytiColors.line)),
+        ),
+        child: Row(
+          children: [
+            IconButton(
+              tooltip: 'رجوع',
+              icon: const Icon(Icons.arrow_forward_rounded),
+              color: BaytiColors.text,
+              onPressed: () => Navigator.of(context).maybePop(),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'الإعدادات',
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: context.bPrimaryDark,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    listName == null ? 'تخصيص بيتي' : 'قائمة: $listName',
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 11, color: BaytiColors.muted),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

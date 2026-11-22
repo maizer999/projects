@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../data/repository.dart';
-import 'glass.dart';
 import 'list_screen.dart';
 import 'theme.dart';
 
@@ -78,97 +77,157 @@ class _LandingScreenState extends State<LandingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final primary = context.bPrimary;
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
-              child: Column(
-                children: [
-                  GlassHero(
-                    margin: EdgeInsets.zero,
-                    padding: const EdgeInsets.all(28),
+      backgroundColor: BaytiColors.bg,
+      body: Stack(
+        children: [
+          _backdrop(primary),
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 440),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(24, 36, 24, 28),
+                    decoration: BoxDecoration(
+                      color: BaytiColors.card,
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(color: BaytiColors.line),
+                      boxShadow: BaytiShadows.md,
+                    ),
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Container(
-                          width: 72,
-                          height: 72,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(22),
-                          ),
-                          child: const Icon(Icons.home_rounded,
-                              color: Colors.white, size: 40),
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'بيتي',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 32,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
+                        _LogoMark(primary: primary),
+                        const SizedBox(height: 20),
                         Text(
-                          'تتبع مشتريات ونواقص العائلة',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.9),
-                            fontSize: 14,
-                          ),
+                          'بيتي',
+                          style: Theme.of(context)
+                              .textTheme
+                              .displayLarge
+                              ?.copyWith(
+                                fontSize: 36,
+                                color: context.bPrimaryDark,
+                              ),
                         ),
+                        const SizedBox(height: 10),
+                        Text(
+                          'متتبع مشتريات ونواقص العائلة — شارك الرابط مع أفراد العائلة، والجميع يرى ويعدّل نفس القائمة.',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(
+                                color: BaytiColors.muted,
+                                height: 1.75,
+                                fontSize: 14.5,
+                              ),
+                        ),
+                        const SizedBox(height: 32),
+                        _bigCreateButton(),
+                        const SizedBox(height: 24),
+                        const _Divider(label: 'أو'),
+                        const SizedBox(height: 20),
+                        _joinBlock(),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  GlassSurface(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const _SectionLabel(
-                          icon: Icons.add_circle_outline,
-                          label: 'ابدأ قائمة جديدة',
-                        ),
-                        const SizedBox(height: 12),
-                        FilledButton.icon(
-                          onPressed: _busy ? null : _create,
-                          icon: const Icon(Icons.add),
-                          label: const Text('إنشاء قائمة بيت'),
-                        ),
-                      ],
-                    ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _backdrop(Color primary) {
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: Stack(
+          children: [
+            Positioned(
+              top: -120,
+              right: -80,
+              child: _blob(primary.withValues(alpha: 0.08), 280),
+            ),
+            Positioned(
+              bottom: -140,
+              left: -100,
+              child: _blob(context.bAccent.withValues(alpha: 0.18), 340),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _blob(Color color, double size) => Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: color,
+        ),
+      );
+
+  Widget _bigCreateButton() {
+    final primary = context.bPrimary;
+    return Opacity(
+      opacity: _busy ? 0.6 : 1,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(60),
+          boxShadow: _busy
+              ? const []
+              : [
+                  BoxShadow(
+                    color: primary.withValues(alpha: 0.32),
+                    blurRadius: 24,
+                    offset: const Offset(0, 10),
                   ),
-                  const SizedBox(height: 16),
-                  GlassSurface(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const _SectionLabel(
-                          icon: Icons.vpn_key_outlined,
-                          label: 'لديك رمز دعوة؟',
-                        ),
-                        const SizedBox(height: 12),
-                        TextField(
-                          controller: _joinCtrl,
-                          textDirection: TextDirection.ltr,
-                          textCapitalization: TextCapitalization.characters,
-                          decoration: const InputDecoration(
-                            hintText: 'أدخل الرمز أو الصق الرابط',
-                            prefixIcon: Icon(Icons.link, size: 20),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        OutlinedButton.icon(
-                          onPressed: _busy ? null : _join,
-                          icon: const Icon(Icons.group_add),
-                          label: const Text('الانضمام للقائمة'),
-                        ),
-                      ],
+                ],
+        ),
+        child: Material(
+          color: primary,
+          shape: const StadiumBorder(),
+          elevation: 0,
+          child: InkWell(
+            customBorder: const StadiumBorder(),
+            onTap: _busy ? null : _create,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 36, vertical: 18),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (_busy) ...[
+                    const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.4,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                  ] else ...[
+                    const Icon(Icons.add_rounded,
+                        color: Colors.white, size: 22),
+                    const SizedBox(width: 8),
+                  ],
+                  const Text(
+                    'إنشاء قائمة جديدة',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16.5,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],
@@ -179,27 +238,103 @@ class _LandingScreenState extends State<LandingScreen> {
       ),
     );
   }
+
+  Widget _joinBlock() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'لديك رمز دعوة؟',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: BaytiColors.muted,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _joinCtrl,
+          textDirection: TextDirection.ltr,
+          textAlign: TextAlign.center,
+          textCapitalization: TextCapitalization.characters,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 2,
+          ),
+          decoration: const InputDecoration(
+            hintText: 'أدخل الرمز أو الصق الرابط',
+          ),
+        ),
+        const SizedBox(height: 12),
+        OutlinedButton.icon(
+          onPressed: _busy ? null : _join,
+          icon: const Icon(Icons.group_add_rounded, size: 18),
+          label: const Text('الانضمام للقائمة'),
+        ),
+      ],
+    );
+  }
 }
 
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel({required this.icon, required this.label});
-  final IconData icon;
+class _LogoMark extends StatelessWidget {
+  const _LogoMark({required this.primary});
+  final Color primary;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 84,
+      height: 84,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            primary,
+            Color.lerp(primary, Colors.black, 0.18) ?? primary,
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: primary.withValues(alpha: 0.30),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: const Icon(
+        Icons.home_rounded,
+        color: Colors.white,
+        size: 44,
+      ),
+    );
+  }
+}
+
+class _Divider extends StatelessWidget {
+  const _Divider({required this.label});
   final String label;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: BaytiColors.primaryDark),
-        const SizedBox(width: 8),
-        Text(
-          label,
-          style: TextStyle(
-            color: BaytiColors.text,
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
+        const Expanded(child: Divider(color: BaytiColors.line)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: BaytiColors.placeholder,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
+        const Expanded(child: Divider(color: BaytiColors.line)),
       ],
     );
   }

@@ -4,7 +4,6 @@ import 'package:share_plus/share_plus.dart';
 
 import '../data/models.dart';
 import '../data/repository.dart';
-import 'glass.dart';
 import 'name_prompt.dart';
 import 'theme.dart';
 
@@ -72,6 +71,7 @@ class _MembersScreenState extends State<MembersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: BaytiColors.bg,
       appBar: AppBar(title: const Text('الأعضاء')),
       body: StreamBuilder<ShoppingList?>(
         stream: widget.repo.watchList(widget.listId),
@@ -84,102 +84,65 @@ class _MembersScreenState extends State<MembersScreen> {
           final code = list.inviteCode ?? '——';
           final editors = list.editors;
           return ListView(
-            padding: const EdgeInsets.fromLTRB(0, 12, 0, 32),
+            padding: const EdgeInsets.fromLTRB(0, 8, 0, 32),
             children: [
-              GlassHero(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              _inviteCard(context, code, list.name),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 10),
+                child: Row(
                   children: [
                     Text(
-                      'رمز الدعوة',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.9),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      'الأعضاء',
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            code,
-                            textDirection: TextDirection.ltr,
-                            style: const TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                              letterSpacing: 6,
-                            ),
-                          ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: context.bPrimarySoft,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        '${1 + editors.length}',
+                        style: TextStyle(
+                          color: context.bPrimaryDark,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
                         ),
-                        _GlassIconButton(
-                          icon: Icons.copy_rounded,
-                          onTap: () => _copyCode(context, code),
-                        ),
-                        const SizedBox(width: 8),
-                        _GlassIconButton(
-                          icon: Icons.ios_share,
-                          onTap: () => _share(code, list.name),
-                        ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-                child: Text('الأعضاء (${1 + editors.length})',
-                    style: Theme.of(context).textTheme.titleMedium),
-              ),
-              Card(
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: BaytiColors.primary,
-                    child: Icon(Icons.shield, color: Colors.white),
-                  ),
-                  title: Text(list.ownerName ?? '——'),
-                  subtitle: Text('المالك',
-                      style: TextStyle(color: BaytiColors.muted)),
-                  trailing: list.ownerName == _me
-                      ? const Chip(label: Text('أنت'))
-                      : null,
-                ),
+              _memberTile(
+                context,
+                name: list.ownerName ?? '——',
+                role: 'المالك',
+                isOwnerRow: true,
+                isMe: list.ownerName == _me,
               ),
               if (editors.isEmpty)
                 Padding(
-                  padding: EdgeInsets.all(16),
+                  padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
                   child: Text(
                     'لا يوجد محررون آخرون بعد. شارك رمز الدعوة لإضافة أفراد العائلة.',
-                    style: TextStyle(color: BaytiColors.muted),
+                    style: TextStyle(
+                      color: BaytiColors.muted,
+                      height: 1.7,
+                    ),
                   ),
                 )
               else
                 ...editors.map(
-                  (member) => Card(
-                    child: ListTile(
-                      leading: const CircleAvatar(
-                        child: Icon(Icons.person),
-                      ),
-                      title: Text(member),
-                      subtitle: Text('محرر',
-                          style: TextStyle(color: BaytiColors.muted)),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (member == _me) const Chip(label: Text('أنت')),
-                          if (isOwner && member != _me)
-                            IconButton(
-                              tooltip: 'إزالة',
-                              icon: Icon(Icons.person_remove,
-                                  color: BaytiColors.danger),
-                              onPressed: () => _confirmRemove(context, member),
-                            ),
-                        ],
-                      ),
-                    ),
+                  (member) => _memberTile(
+                    context,
+                    name: member,
+                    role: 'محرر',
+                    isOwnerRow: false,
+                    isMe: member == _me,
+                    canRemove: isOwner && member != _me,
+                    onRemove: () => _confirmRemove(context, member),
                   ),
                 ),
             ],
@@ -188,10 +151,178 @@ class _MembersScreenState extends State<MembersScreen> {
       ),
     );
   }
+
+  Widget _inviteCard(BuildContext context, String code, String name) {
+    final primary = context.bPrimary;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+          colors: [
+            primary.withValues(alpha: 0.10),
+            BaytiColors.summaryBg,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: BaytiColors.summaryBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.qr_code_2_rounded,
+                  size: 18, color: context.bPrimaryDark),
+              const SizedBox(width: 6),
+              Text(
+                'رمز الدعوة',
+                style: TextStyle(
+                  color: context.bPrimaryDark,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  code,
+                  textDirection: TextDirection.ltr,
+                  style: TextStyle(
+                    fontSize: 34,
+                    fontWeight: FontWeight.w700,
+                    color: context.bPrimaryDark,
+                    letterSpacing: 8,
+                    height: 1,
+                  ),
+                ),
+              ),
+              _InviteIconButton(
+                icon: Icons.copy_rounded,
+                onTap: () => _copyCode(context, code),
+              ),
+              const SizedBox(width: 8),
+              _InviteIconButton(
+                icon: Icons.ios_share_rounded,
+                onTap: () => _share(code, name),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'شارك هذا الرمز مع أفراد العائلة ليتمكنوا من الانضمام للقائمة.',
+            style: TextStyle(
+              color: BaytiColors.muted,
+              fontSize: 12.5,
+              height: 1.7,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _memberTile(
+    BuildContext context, {
+    required String name,
+    required String role,
+    required bool isOwnerRow,
+    required bool isMe,
+    bool canRemove = false,
+    VoidCallback? onRemove,
+  }) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: BaytiColors.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: BaytiColors.line),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isOwnerRow
+                    ? [context.bPrimary, context.bPrimaryDark]
+                    : [BaytiColors.accent, BaytiColors.mutedSoft],
+              ),
+            ),
+            child: Icon(
+              isOwnerRow ? Icons.shield_rounded : Icons.person_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    color: BaytiColors.text,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  role,
+                  style: const TextStyle(
+                    color: BaytiColors.muted,
+                    fontSize: 12.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (isMe)
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: context.bPrimarySoft,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                'أنت',
+                style: TextStyle(
+                  color: context.bPrimaryDark,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          if (canRemove)
+            IconButton(
+              tooltip: 'إزالة',
+              icon: const Icon(Icons.person_remove_rounded,
+                  color: BaytiColors.danger),
+              onPressed: onRemove,
+            ),
+        ],
+      ),
+    );
+  }
 }
 
-class _GlassIconButton extends StatelessWidget {
-  const _GlassIconButton({required this.icon, required this.onTap});
+class _InviteIconButton extends StatelessWidget {
+  const _InviteIconButton({required this.icon, required this.onTap});
   final IconData icon;
   final VoidCallback onTap;
 
@@ -199,15 +330,16 @@ class _GlassIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(14),
       child: Container(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(11),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
+          color: BaytiColors.card,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: BaytiColors.line),
+          boxShadow: BaytiShadows.sm,
         ),
-        child: Icon(icon, color: Colors.white, size: 18),
+        child: Icon(icon, color: context.bPrimaryDark, size: 18),
       ),
     );
   }
