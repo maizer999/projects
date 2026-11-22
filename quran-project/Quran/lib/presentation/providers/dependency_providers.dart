@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mushaf_text/mushaf_text.dart' as mt;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/datasources/audio_player_data_source.dart';
@@ -31,6 +32,11 @@ final sharedPreferencesProvider = Provider<SharedPreferences>(
 /// Already initialised (text loaded) when injected.
 final quranRepositoryProvider = Provider<QuranRepository>(
   (ref) => throw UnimplementedError('Override quranRepositoryProvider in main()'),
+);
+
+/// Raw mushaf_text ayah list. Overridden in main() after the bundled text loads.
+final allMushafAyahsProvider = Provider<List<mt.Ayah>>(
+  (ref) => throw UnimplementedError('Override allMushafAyahsProvider in main()'),
 );
 
 // ---------------------------------------------------------------------------

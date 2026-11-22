@@ -146,7 +146,6 @@ class SettingsScreen extends ConsumerWidget {
 
             const SizedBox(height: 24),
 
-            // ── Notifications ─────────────────────────────────
             _SectionHeader(label: 'التذكيرات'),
             ListTile(
               contentPadding: EdgeInsets.zero,

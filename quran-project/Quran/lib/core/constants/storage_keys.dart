@@ -20,4 +20,8 @@ class StorageKeys {
 
   /// JSON array of page numbers the user bookmarked (المرجعية).
   static const String bookmarkedPages = 'bookmarkedPages';
+
+  static const String notificationsEnabled = 'notificationsEnabled';
+  static const String notifFromAyah = 'notifFromAyah';
+  static const String notifToAyah = 'notifToAyah';
 }

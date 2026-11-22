@@ -6,6 +6,9 @@ class AppSettings {
     required this.tajweed,
     required this.mushafFontSize,
     required this.fontId,
+    this.notificationsEnabled = false,
+    this.notifFromAyah = 1,
+    this.notifToAyah = 6236,
   });
 
   final String reciterId;
@@ -19,6 +22,10 @@ class AppSettings {
   /// Id of the Arabic font used for the text (see font_constants.dart).
   final String fontId;
 
+  final bool notificationsEnabled;
+  final int notifFromAyah;
+  final int notifToAyah;
+
   AppSettings copyWith({
     String? reciterId,
     String? themePresetId,
@@ -26,6 +33,9 @@ class AppSettings {
     bool? tajweed,
     double? mushafFontSize,
     String? fontId,
+    bool? notificationsEnabled,
+    int? notifFromAyah,
+    int? notifToAyah,
   }) =>
       AppSettings(
         reciterId: reciterId ?? this.reciterId,
@@ -34,5 +44,8 @@ class AppSettings {
         tajweed: tajweed ?? this.tajweed,
         mushafFontSize: mushafFontSize ?? this.mushafFontSize,
         fontId: fontId ?? this.fontId,
+        notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
+        notifFromAyah: notifFromAyah ?? this.notifFromAyah,
+        notifToAyah: notifToAyah ?? this.notifToAyah,
       );
 }

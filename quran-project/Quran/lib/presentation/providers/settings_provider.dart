@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mushaf_text/mushaf_text.dart' as mt;
 
 import '../../core/constants/app_constants.dart';
+import '../../core/services/notification_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../domain/entities/app_settings.dart';
 import '../../domain/entities/reciter.dart';
@@ -38,6 +40,32 @@ class SettingsNotifier extends Notifier<AppSettings> {
         mushafFontSize: (state.mushafFontSize + delta)
             .clamp(AppConstants.mushafFontMin, AppConstants.mushafFontMax),
       ));
+
+  Future<void> setNotifications(bool enabled, List<mt.Ayah> ayahs) async {
+    await _update(state.copyWith(notificationsEnabled: enabled));
+    if (enabled) {
+      await NotificationService.init();
+      await NotificationService.requestPermission();
+      await NotificationService.schedule(
+        ayahs,
+        fromId: state.notifFromAyah,
+        toId: state.notifToAyah,
+      );
+    } else {
+      await NotificationService.cancel();
+    }
+  }
+
+  Future<void> setNotifRange({
+    required int fromId,
+    required int toId,
+    required List<mt.Ayah> ayahs,
+  }) async {
+    await _update(state.copyWith(notifFromAyah: fromId, notifToAyah: toId));
+    if (state.notificationsEnabled) {
+      await NotificationService.schedule(ayahs, fromId: fromId, toId: toId);
+    }
+  }
 }
 
 final recitersProvider = Provider<List<Reciter>>((ref) => ref.watch(getRecitersProvider)());
