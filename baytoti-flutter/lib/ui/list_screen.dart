@@ -8,7 +8,6 @@ import '../data/repository.dart';
 import 'members_screen.dart';
 import 'name_prompt.dart';
 import 'purchase_dialog.dart';
-import 'quick_add_sheet.dart';
 import 'settings_screen.dart';
 import 'theme.dart';
 
@@ -31,7 +30,6 @@ class _ListScreenState extends State<ListScreen> {
 
   List<Purchase> _purchases = [];
   List<WishItem> _wishlist = [];
-  List<ProductStat> _topStats = const [];
   ShoppingList? _list;
 
   @override
@@ -39,9 +37,6 @@ class _ListScreenState extends State<ListScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await showNamePromptIfNeeded(context);
-    });
-    widget.repo.watchTopStats(widget.listId).listen((s) {
-      if (mounted) setState(() => _topStats = s);
     });
   }
 
@@ -104,35 +99,25 @@ class _ListScreenState extends State<ListScreen> {
     await widget.repo.addWish(widget.listId, w);
   }
 
-  Future<void> _addPurchase() async {
-    final p = await showDialog<Purchase>(
-      context: context,
-      builder: (_) => PurchaseDialog(topStats: _topStats),
+  Future<void> _addPurchaseInline({
+    required String name,
+    double? price,
+  }) async {
+    if (name.isEmpty) return;
+    if (!await _confirmSameDayDup(name)) return;
+    final addedBy = await DisplayName.get();
+    final p = Purchase(
+      id: ListRepository.generateId(),
+      itemName: name,
+      price: price,
+      category: PurchaseCategory.food,
+      addedByName: addedBy,
+      date: DateTime.now(),
     );
-    if (p == null) return;
-    if (!await _confirmSameDayDup(p.itemName)) return;
     await widget.repo.addPurchase(widget.listId, p);
   }
 
-  Future<void> _addFab() async {
-    if (_tab == _Tab.needs) {
-      await _addNeed();
-    } else {
-      await _addPurchase();
-    }
-  }
-
-  Future<void> _quickAdd() async {
-    final p = await showModalBottomSheet<Purchase>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => QuickAddSheet(topStats: _topStats),
-    );
-    if (p == null) return;
-    if (!await _confirmSameDayDup(p.itemName)) return;
-    await widget.repo.addPurchase(widget.listId, p);
-  }
+  Future<void> _addFab() => _addNeed();
 
   Future<void> _convertNeedViaCheckbox(WishItem w, {double? price}) async {
     final addedBy = await DisplayName.get();
@@ -275,7 +260,7 @@ class _ListScreenState extends State<ListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: BaytiColors.bg,
-      floatingActionButton: _tab == _Tab.history ? null : _buildFab(),
+      floatingActionButton: _tab == _Tab.needs ? _buildFab() : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: _buildBottomNav(),
       resizeToAvoidBottomInset: true,
@@ -324,29 +309,26 @@ class _ListScreenState extends State<ListScreen> {
     final primary = context.bPrimary;
     return Padding(
       padding: const EdgeInsets.only(bottom: 10, left: 4),
-      child: GestureDetector(
-        onLongPress: _tab == _Tab.purchases ? _quickAdd : null,
-        child: Container(
-          width: 62,
-          height: 62,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: primary.withValues(alpha: 0.38),
-                blurRadius: 22,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: FloatingActionButton(
-            onPressed: _addFab,
-            backgroundColor: primary,
-            foregroundColor: Colors.white,
-            elevation: 0,
-            shape: const CircleBorder(),
-            child: const Icon(Icons.add_rounded, size: 30),
-          ),
+      child: Container(
+        width: 62,
+        height: 62,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: primary.withValues(alpha: 0.38),
+              blurRadius: 22,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: FloatingActionButton(
+          onPressed: _addFab,
+          backgroundColor: primary,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shape: const CircleBorder(),
+          child: const Icon(Icons.add_rounded, size: 30),
         ),
       ),
     );
@@ -680,6 +662,11 @@ class _ListScreenState extends State<ListScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            _InlinePurchaseAdd(
+              primary: context.bPrimary,
+              onAdd: _addPurchaseInline,
+            ),
+            const SizedBox(height: 12),
             _filterChips(),
             const SizedBox(height: 12),
             _summaryCard(count: items.length, total: _total),
@@ -1294,6 +1281,155 @@ class _NeedRowState extends State<_NeedRow> {
           ),
           widget.deleteButton(onTap: widget.onDelete),
         ],
+      ),
+    );
+  }
+}
+
+class _InlinePurchaseAdd extends StatefulWidget {
+  const _InlinePurchaseAdd({required this.primary, required this.onAdd});
+
+  final Color primary;
+  final Future<void> Function({required String name, double? price}) onAdd;
+
+  @override
+  State<_InlinePurchaseAdd> createState() => _InlinePurchaseAddState();
+}
+
+class _InlinePurchaseAddState extends State<_InlinePurchaseAdd> {
+  final _nameCtrl = TextEditingController();
+  final _priceCtrl = TextEditingController();
+  final _nameFocus = FocusNode();
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _priceCtrl.dispose();
+    _nameFocus.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    final name = _nameCtrl.text.trim();
+    if (name.isEmpty) {
+      _nameFocus.requestFocus();
+      return;
+    }
+    final priceText = _priceCtrl.text.trim();
+    final price = priceText.isEmpty ? null : parseFlexibleDouble(priceText);
+    await widget.onAdd(name: name, price: price);
+    if (!mounted) return;
+    _nameCtrl.clear();
+    _priceCtrl.clear();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _nameCtrl,
+            focusNode: _nameFocus,
+            textInputAction: TextInputAction.next,
+            onTapOutside: (_) =>
+                FocusManager.instance.primaryFocus?.unfocus(),
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              color: BaytiColors.text,
+            ),
+            decoration: _inlineDecoration(
+              hint: 'اسم المنتج',
+              primary: widget.primary,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        SizedBox(
+          width: 96,
+          child: TextField(
+            controller: _priceCtrl,
+            textAlign: TextAlign.center,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            textInputAction: TextInputAction.done,
+            onTapOutside: (_) =>
+                FocusManager.instance.primaryFocus?.unfocus(),
+            onSubmitted: (_) => _submit(),
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+              color: BaytiColors.text,
+            ),
+            decoration: _inlineDecoration(
+              hint: 'السعر',
+              primary: widget.primary,
+              suffix: InkWell(
+                onTap: () =>
+                    FocusManager.instance.primaryFocus?.unfocus(),
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(
+                    Icons.keyboard_hide_rounded,
+                    size: 18,
+                    color: widget.primary,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Material(
+          color: widget.primary,
+          shape: const CircleBorder(),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: _submit,
+            child: const SizedBox(
+              width: 44,
+              height: 44,
+              child: Icon(Icons.add_rounded, color: Colors.white, size: 24),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  InputDecoration _inlineDecoration({
+    required String hint,
+    required Color primary,
+    Widget? suffix,
+  }) {
+    return InputDecoration(
+      isDense: true,
+      hintText: hint,
+      hintStyle: const TextStyle(
+        color: BaytiColors.mutedSoft,
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+      ),
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      filled: true,
+      fillColor: BaytiColors.card,
+      suffixIcon: suffix,
+      suffixIconConstraints:
+          const BoxConstraints(minWidth: 28, minHeight: 28),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: BaytiColors.line),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: BaytiColors.line),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: primary, width: 1.4),
       ),
     );
   }
