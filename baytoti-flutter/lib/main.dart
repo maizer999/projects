@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'data/repository.dart';
 import 'data/theme_settings.dart';
 import 'ui/landing_screen.dart';
+import 'ui/phone_frame.dart';
 import 'ui/theme.dart';
 
 Future<void> main() async {
@@ -63,9 +64,11 @@ class _BaytiAppState extends State<BaytiApp> implements BaytiAppController {
       ],
       builder: (context, child) => Directionality(
         textDirection: TextDirection.rtl,
-        child: ColoredBox(
-          color: BaytiColors.bg,
-          child: child ?? const SizedBox(),
+        child: PhoneFrame(
+          child: ColoredBox(
+            color: BaytiColors.bg,
+            child: child ?? const SizedBox(),
+          ),
         ),
       ),
       home: LandingScreen(repo: _repo),

@@ -278,7 +278,11 @@ class _ListScreenState extends State<ListScreen> {
       floatingActionButton: _tab == _Tab.history ? null : _buildFab(),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: _buildBottomNav(),
-      body: SafeArea(
+      resizeToAvoidBottomInset: true,
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SafeArea(
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 640),
@@ -311,6 +315,7 @@ class _ListScreenState extends State<ListScreen> {
             ),
           ),
         ),
+      ),
       ),
     );
   }
@@ -1179,6 +1184,7 @@ class _NeedRowState extends State<_NeedRow> {
   }
 
   void _handleCheck() {
+    FocusManager.instance.primaryFocus?.unfocus();
     final text = _ctrl.text.trim();
     final price = text.isEmpty ? null : parseFlexibleDouble(text);
     widget.onCheck(price);
@@ -1227,12 +1233,15 @@ class _NeedRowState extends State<_NeedRow> {
           ),
           const SizedBox(width: 8),
           SizedBox(
-            width: 82,
+            width: 96,
             child: TextField(
               controller: _ctrl,
               textAlign: TextAlign.center,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
+              textInputAction: TextInputAction.done,
+              onTapOutside: (_) =>
+                  FocusManager.instance.primaryFocus?.unfocus(),
               style: const TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: 14,
@@ -1247,9 +1256,24 @@ class _NeedRowState extends State<_NeedRow> {
                   fontWeight: FontWeight.w500,
                 ),
                 contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 8),
+                    horizontal: 8, vertical: 8),
                 filled: true,
                 fillColor: BaytiColors.card,
+                suffixIcon: InkWell(
+                  onTap: () =>
+                      FocusManager.instance.primaryFocus?.unfocus(),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.keyboard_hide_rounded,
+                      size: 18,
+                      color: widget.primary,
+                    ),
+                  ),
+                ),
+                suffixIconConstraints:
+                    const BoxConstraints(minWidth: 28, minHeight: 28),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: const BorderSide(color: BaytiColors.line),
@@ -1264,7 +1288,8 @@ class _NeedRowState extends State<_NeedRow> {
                       BorderSide(color: widget.primary, width: 1.4),
                 ),
               ),
-              onSubmitted: (_) => _handleCheck(),
+              onSubmitted: (_) =>
+                  FocusManager.instance.primaryFocus?.unfocus(),
             ),
           ),
           widget.deleteButton(onTap: widget.onDelete),
