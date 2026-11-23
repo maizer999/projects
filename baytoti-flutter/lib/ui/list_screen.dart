@@ -1449,38 +1449,51 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: BaytiColors.itemCard,
-                shape: BoxShape.circle,
-                border: Border.all(color: BaytiColors.line),
-              ),
-              child: Center(
-                child: Text(emoji, style: const TextStyle(fontSize: 38)),
-              ),
+    return LayoutBuilder(
+      builder: (ctx, c) {
+        final compact = c.maxHeight < 140;
+        return Center(
+          child: Padding(
+            padding: EdgeInsets.all(compact ? 8 : 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (!compact) ...[
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: BaytiColors.itemCard,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: BaytiColors.line),
+                    ),
+                    child: Center(
+                      child: Text(emoji,
+                          style: const TextStyle(fontSize: 38)),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                ] else ...[
+                  Text(emoji, style: const TextStyle(fontSize: 22)),
+                  const SizedBox(height: 4),
+                ],
+                Flexible(
+                  child: Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: const Color(0xFF9E9288),
+                      fontSize: compact ? 13 : 15,
+                      height: compact ? 1.3 : 1.7,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 14),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Color(0xFF9E9288),
-                fontSize: 15,
-                height: 1.7,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
