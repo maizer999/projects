@@ -7,7 +7,6 @@ import '../data/models.dart';
 import '../data/repository.dart';
 import 'members_screen.dart';
 import 'name_prompt.dart';
-import 'price_prompt.dart';
 import 'purchase_dialog.dart';
 import 'quick_add_sheet.dart';
 import 'settings_screen.dart';
@@ -135,14 +134,12 @@ class _ListScreenState extends State<ListScreen> {
     await widget.repo.addPurchase(widget.listId, p);
   }
 
-  Future<void> _convertNeedViaCheckbox(WishItem w) async {
-    final result = await showPricePrompt(context, itemName: w.itemName);
-    if (result == null || !result.confirmed) return;
+  Future<void> _convertNeedViaCheckbox(WishItem w, {double? price}) async {
     final addedBy = await DisplayName.get();
     final p = Purchase(
       id: ListRepository.generateId(),
       itemName: w.itemName,
-      price: result.price,
+      price: price,
       category: PurchaseCategory.food,
       addedByName: addedBy,
       date: DateTime.now(),
@@ -645,54 +642,19 @@ class _ListScreenState extends State<ListScreen> {
   }
 
   Widget _needRow(WishItem w) {
-    return _itemCard(
-      child: Row(
-        children: [
-          Transform.scale(
-            scale: 1.15,
-            child: Checkbox(
-              value: false,
-              activeColor: context.bPrimary,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
-              ),
-              side:
-                  const BorderSide(color: BaytiColors.muted, width: 1.5),
-              onChanged: (_) => _convertNeedViaCheckbox(w),
-            ),
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  w.itemName,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
-                    color: BaytiColors.text,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  w.addedByName,
-                  style: const TextStyle(
-                    color: BaytiColors.mutedSoft,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          _iconBtn(
-            icon: Icons.delete_outline_rounded,
-            danger: true,
-            onTap: () => _confirmDelete(
-              onConfirm: () => widget.repo.deleteWish(widget.listId, w.id),
-            ),
-          ),
-        ],
+    return _NeedRow(
+      key: ValueKey(w.id),
+      wish: w,
+      primary: context.bPrimary,
+      onCheck: (price) => _convertNeedViaCheckbox(w, price: price),
+      onDelete: () => _confirmDelete(
+        onConfirm: () => widget.repo.deleteWish(widget.listId, w.id),
+      ),
+      cardBuilder: ({required Widget child}) => _itemCard(child: child),
+      deleteButton: ({required VoidCallback onTap}) => _iconBtn(
+        icon: Icons.delete_outline_rounded,
+        danger: true,
+        onTap: onTap,
       ),
     );
   }
@@ -1180,6 +1142,133 @@ class _ListScreenState extends State<ListScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _NeedRow extends StatefulWidget {
+  const _NeedRow({
+    super.key,
+    required this.wish,
+    required this.primary,
+    required this.onCheck,
+    required this.onDelete,
+    required this.cardBuilder,
+    required this.deleteButton,
+  });
+
+  final WishItem wish;
+  final Color primary;
+  final void Function(double? price) onCheck;
+  final VoidCallback onDelete;
+  final Widget Function({required Widget child}) cardBuilder;
+  final Widget Function({required VoidCallback onTap}) deleteButton;
+
+  @override
+  State<_NeedRow> createState() => _NeedRowState();
+}
+
+class _NeedRowState extends State<_NeedRow> {
+  final _ctrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _handleCheck() {
+    final text = _ctrl.text.trim();
+    final price = text.isEmpty ? null : parseFlexibleDouble(text);
+    widget.onCheck(price);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.cardBuilder(
+      child: Row(
+        children: [
+          Transform.scale(
+            scale: 1.15,
+            child: Checkbox(
+              value: false,
+              activeColor: widget.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
+              side: const BorderSide(color: BaytiColors.muted, width: 1.5),
+              onChanged: (_) => _handleCheck(),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.wish.itemName,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                    color: BaytiColors.text,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  widget.wish.addedByName,
+                  style: const TextStyle(
+                    color: BaytiColors.mutedSoft,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 82,
+            child: TextField(
+              controller: _ctrl,
+              textAlign: TextAlign.center,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              style: const TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
+                color: BaytiColors.text,
+              ),
+              decoration: InputDecoration(
+                isDense: true,
+                hintText: 'السعر',
+                hintStyle: const TextStyle(
+                  color: BaytiColors.mutedSoft,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w500,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 10, vertical: 8),
+                filled: true,
+                fillColor: BaytiColors.card,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: BaytiColors.line),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: BaytiColors.line),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide:
+                      BorderSide(color: widget.primary, width: 1.4),
+                ),
+              ),
+              onSubmitted: (_) => _handleCheck(),
+            ),
+          ),
+          widget.deleteButton(onTap: widget.onDelete),
+        ],
       ),
     );
   }
