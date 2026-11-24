@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>شنطة رحلة أنطاليا</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lalezar&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: light, summery, practical — a packing list you tick on your phone at the door
+   IDEA: a luggage tag for an Antalya beach trip
+   PICTURE: the list itself, under a sea-and-sun tag header with a live packed meter
+   COLOUR and TYPE: Mediterranean turquoise dominant, sand support, sun-orange accent; Lalezar + Tajawal
+   LAYOUT: one calm column, tag header, meter, list, add-row, tools */
+:root{color-scheme:light dark;
+  --bg:light-dark(#f4fbfb,#061a1d);--card:light-dark(#ffffff,#0c282c);--ink:light-dark(#0c2e33,#e6f6f5);
+  --mute:light-dark(#557378,#8fb3b5);--sea:light-dark(#0a8f94,#2cc1c4);--sea2:light-dark(#066a70,#127f84);
+  --sand:light-dark(#f6ead3,#1c3236);--sun:#ff8a2a;--line:light-dark(#d7ecec,#16393d)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 Tajawal,system-ui,sans-serif;overflow-x:clip}
+.wrap{max-width:640px;margin:0 auto;padding:16px max(4vw,14px) 48px}
+.tag{position:relative;overflow:hidden;border-radius:22px;color:#fff;padding:26px 22px 22px;
+  background:linear-gradient(160deg,var(--sea) 0%,var(--sea2) 100%);box-shadow:0 10px 30px -14px #066a7088}
+.tag svg{position:absolute;inset:auto 0 0 0;width:100%;height:70px;opacity:.35}
+.sun{position:absolute;top:-34px;inset-inline-start:-34px;width:120px;height:120px;border-radius:50%;
+  background:radial-gradient(circle at 60% 60%,#ffd27a,var(--sun));opacity:.9}
+.hole{position:absolute;top:18px;inset-inline-end:18px;width:18px;height:18px;border-radius:50%;background:var(--bg);box-shadow:inset 0 2px 4px #0004}
+h1{position:relative;font:400 clamp(34px,8vw,48px)/1.05 Lalezar,Tajawal,sans-serif;margin:24px 0 4px;text-wrap:balance}
+.sub{position:relative;margin:0;opacity:.92;font-size:16px}
+.meter{position:relative;margin-top:18px;display:flex;align-items:center;gap:12px}
+.bar{flex:1;height:12px;border-radius:99px;background:#ffffff40;overflow:hidden}
+.fill{height:100%;width:0;background:#fff;border-radius:99px;transition:width .35s ease}
+.count{font:400 26px/1 Lalezar,sans-serif;white-space:nowrap}
+.done-msg{position:relative;margin:10px 0 0;font-weight:700;display:none}
+.tag.all .done-msg{display:block}
+.tools{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 10px}
+.chip{font:500 15px Tajawal,sans-serif;min-height:44px;padding:0 16px;border-radius:99px;border:1px solid var(--line);
+  background:var(--card);color:var(--ink);cursor:pointer}
+.chip[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip.warn{margin-inline-start:auto;color:#c2410c}
+ul{list-style:none;margin:0;padding:0;background:var(--card);border-radius:18px;border:1px solid var(--line);overflow:hidden}
+li{display:flex;align-items:center;gap:4px;border-top:1px solid var(--line)}
+li:first-child{border-top:0}
+label{flex:1;display:flex;align-items:center;gap:14px;padding:12px 16px;min-height:56px;cursor:pointer}
+input[type=checkbox]{appearance:none;flex:none;width:26px;height:26px;margin:0;border-radius:8px;border:2px solid var(--sea);
+  display:grid;place-items:center;cursor:pointer;transition:background .15s}
+input[type=checkbox]::after{content:"";width:12px;height:7px;border:3px solid #fff;border-top:0;border-right:0;transform:rotate(-45deg) translate(1px,-1px);opacity:0}
+input[type=checkbox]:checked{background:var(--sea)}
+input[type=checkbox]:checked::after{opacity:1}
+input:focus-visible,button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.txt{flex:1}
+li.on .txt{text-decoration:line-through;color:var(--mute)}
+.mine{font-size:12px;color:var(--sea);background:var(--sand);padding:1px 8px;border-radius:99px;white-space:nowrap}
+.del{flex:none;width:44px;height:44px;margin-inline-end:6px;border:0;background:none;color:var(--mute);font-size:22px;border-radius:12px;cursor:pointer}
+.del:hover{background:var(--sand);color:#c2410c}
+.empty{padding:22px 16px;color:var(--mute);text-align:center}
+form{display:flex;gap:8px;margin-top:14px}
+form input{flex:1;font:16px Tajawal,sans-serif;min-height:48px;padding:0 14px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+form button{font:700 16px Tajawal,sans-serif;min-height:48px;padding:0 20px;border:0;border-radius:14px;background:var(--sun);color:#fff;cursor:pointer}
+.note{margin:18px 0 0;color:var(--mute);font-size:14px;text-align:center}
+.dlg{position:fixed;inset:0;background:#0008;display:none;place-items:center;padding:20px;z-index:5}
+.dlg.open{display:grid}
+.box{background:var(--card);color:var(--ink);border-radius:18px;padding:22px;max-width:340px;width:100%}
+.box p{margin:0 0 16px}.box .row{display:flex;gap:8px;justify-content:flex-end}
+@media (prefers-reduced-motion:reduce){.fill{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="tag" id="tag">
+    <div class="sun"></div><div class="hole"></div>
+    <svg viewBox="0 0 400 70" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0 30 Q50 10 100 30 T200 30 T300 30 T400 30 V70 H0Z" fill="#fff"/>
+      <path d="M0 48 Q50 30 100 48 T200 48 T300 48 T400 48 V70 H0Z" fill="#fff"/>
+    </svg>
+    <h1>شنطة رحلة أنطاليا</h1>
+    <p class="sub">5-12-2025 · أشّر على كل غرض بعد ما تحطه بالشنطة</p>
+    <div class="meter">
+      <div class="bar"><div class="fill" id="fill"></div></div>
+      <span class="count" id="count">0/0</span>
+    </div>
+    <p class="done-msg">الشنطة جاهزة، رحلة سعيدة!</p>
+  </header>
+
+  <div class="tools" role="group" aria-label="عرض">
+    <button class="chip" id="f-all" aria-pressed="true">الكل</button>
+    <button class="chip" id="f-left" aria-pressed="false">الناقص فقط</button>
+    <button class="chip warn" id="reset">مسح العلامات</button>
+  </div>
+
+  <ul id="list"></ul>
+
+  <form id="add">
+    <input id="newItem" placeholder="أضف غرض خاص فيك…" maxlength="80" autocomplete="off" aria-label="غرض جديد">
+    <button type="submit">إضافة</button>
+  </form>
+
+  <p class="note">العلامات والأغراض اللي بتضيفها محفوظة على جهازك أنت فقط، وكل واحد بيفتح الصفحة بتكون عنده قائمته الخاصة.</p>
+</div>
+
+<div class="dlg" id="dlg" role="dialog" aria-modal="true" aria-labelledby="dlgText">
+  <div class="box">
+    <p id="dlgText">بدك تشيل كل العلامات وتبدأ من جديد؟ الأغراض اللي أضفتها بتضل.</p>
+    <div class="row">
+      <button class="chip" id="no">لا</button>
+      <button class="chip" id="yes" style="background:var(--sun);color:#fff;border-color:var(--sun)">نعم، امسح</button>
+    </div>
+  </div>
+</div>
+
+<script>
+{
+const BASE = [
+  "نظارة شمسية","طاقية","واقي شمس","فاين مبلل","بندول ومسكّن","مشط","عطر","منشفة صغيرة",
+  "ماكينة حلاقة","فرشاة ومعجون أسنان","مزيل عرق","شبشب","أكياس فاضية",
+  "شاحن وباور بانك (الكبير والصغير)","حقيبة للمصاري","سماعة بلوتوث",
+  "نظارة السباحة والغطس وشبشب سباحة","قصّافة أظافر + شفرات"
+].map((t,i)=>({id:"b"+i,t,mine:false}));
+
+const KEY = "antalya-2025-checklist-v1";
+let state = {checked:{}, custom:[]};
+try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && typeof s === "object") state = {checked:s.checked||{}, custom:Array.isArray(s.custom)?s.custom:[]}; } catch(e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e) {} };
+
+let onlyLeft = false;
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const items = () => BASE.concat(state.custom.map(c => ({id:c.id, t:c.t, mine:true})));
+
+function render(){
+  const all = items();
+  const done = all.filter(x => state.checked[x.id]).length;
+  $("count").textContent = done + "/" + all.length;
+  $("fill").style.width = (all.length ? done/all.length*100 : 0) + "%";
+  $("tag").classList.toggle("all", all.length > 0 && done === all.length);
+  const shown = onlyLeft ? all.filter(x => !state.checked[x.id]) : all;
+  $("list").innerHTML = shown.length ? shown.map(x => {
+    const on = !!state.checked[x.id];
+    return `<li class="${on?"on":""}"><label><input type="checkbox" data-id="${esc(x.id)}" ${on?"checked":""}>
+      <span class="txt">${esc(x.t)}</span>${x.mine?'<span class="mine">خاص فيك</span>':""}</label>
+      ${x.mine?`<button class="del" data-del="${esc(x.id)}" aria-label="حذف ${esc(x.t)}">×</button>`:""}</li>`;
+  }).join("") : `<li class="empty">ما ضل اشي ناقص، كل شي بالشنطة</li>`;
+}
+
+$("list").addEventListener("change", e => {
+  const id = e.target.dataset.id; if (!id) return;
+  if (e.target.checked) state.checked[id] = true; else delete state.checked[id];
+  save(); render();
+});
+$("list").addEventListener("click", e => {
+  const id = e.target.dataset && e.target.dataset.del; if (!id) return;
+  state.custom = state.custom.filter(c => c.id !== id); delete state.checked[id];
+  save(); render();
+});
+$("add").addEventListener("submit", e => {
+  e.preventDefault();
+  const v = $("newItem").value.trim(); if (!v) return;
+  state.custom.push({id:"c"+Date.now().toString(36), t:v});
+  $("newItem").value = ""; save(); render(); $("newItem").focus();
+});
+const setFilter = left => { onlyLeft = left; $("f-all").setAttribute("aria-pressed", !left); $("f-left").setAttribute("aria-pressed", left); render(); };
+$("f-all").addEventListener("click", () => setFilter(false));
+$("f-left").addEventListener("click", () => setFilter(true));
+$("reset").addEventListener("click", () => { $("dlg").classList.add("open"); $("no").focus(); });
+$("no").addEventListener("click", () => $("dlg").classList.remove("open"));
+$("yes").addEventListener("click", () => { state.checked = {}; save(); render(); $("dlg").classList.remove("open"); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") $("dlg").classList.remove("open"); });
+
+render();
+}
+</script>
+</body>
+</html>
