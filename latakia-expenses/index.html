@@ -289,13 +289,14 @@ $('expPdf').onclick=()=>busy($('expPdf'),async()=>{
 function lsSave(){try{localStorage.setItem(LS,JSON.stringify({items,rates}))}catch{}}
 function lsLoad(){try{const d=JSON.parse(localStorage.getItem(LS)||'{}');items=d.items||[];rates={...DEF_RATES,...(d.rates||{})}}catch{}}
 let api=false;
-async function apiCall(method,path,body){const r=await fetch(path,{method,headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined,cache:'no-store'});if(!r.ok)throw new Error(r.status);return r.json()}
+async function apiCall(method,path,body){const r=await fetch(path,{method,headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined,cache:'no-store'});if(!r.ok)throw new Error(r.status);return r.status===204?null:r.json()}
+const refresh=async()=>applyServer(await apiCall('GET','api/data'));
 function applyServer(d){if(!d||!Array.isArray(d.items))return;items=d.items;const nr={...DEF_RATES,...(d.rates||{})};if(JSON.stringify(nr)!==JSON.stringify(rates)){rates=nr;drawRates()}render()}
-async function addItem(x){if(api){try{applyServer(await apiCall('POST','api/items',x))}catch{toast('ما قدرت أحفظ على السيرفر')}return}
+async function addItem(x){if(api){try{await apiCall('POST','api/items',x);await refresh()}catch{toast('ما قدرت أحفظ على السيرفر')}return}
   if(db){try{await db.collection('expenses').doc(x.id).set(x);return}catch{toast('ما قدرت أحفظ — تأكد من صلاحية التعديل')}}else{items.push(x);lsSave();render()}}
-async function removeItem(id){if(api){try{applyServer(await apiCall('DELETE','api/items/'+encodeURIComponent(id)))}catch{toast('ما قدرت أحذف')}return}
+async function removeItem(id){if(api){try{await apiCall('DELETE','api/items/'+encodeURIComponent(id));await refresh()}catch{toast('ما قدرت أحذف')}return}
   if(db){try{await db.collection('expenses').doc(id).delete()}catch{toast('ما قدرت أحذف')}}else{items=items.filter(x=>x.id!==id);lsSave();render()}}
-async function saveRates(){if(api){try{applyServer(await apiCall('PUT','api/rates',rates))}catch{toast('ما قدرت أحفظ السعر')}return}
+async function saveRates(){if(api){try{await apiCall('PUT','api/rates',rates);await refresh()}catch{toast('ما قدرت أحفظ السعر')}return}
   if(db){try{await db.doc('settings/rates').set(rates)}catch{}}else lsSave()}
 const docs=s=>(s&&s.docs?s.docs:[]).map(d=>({id:d.id,...(typeof d.data==='function'?d.data():d.data)}));
 
